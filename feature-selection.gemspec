@@ -1,11 +1,11 @@
 # coding: utf-8
 lib = File.expand_path('../lib', __FILE__)
 $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
-require 'feature/selection/version'
+require 'feature-selection/version'
 
 Gem::Specification.new do |spec|
   spec.name          = "feature-selection"
-  spec.version       = Feature::Selection::VERSION
+  spec.version       = FeatureSelection::VERSION
   spec.authors       = ["David Charte"]
   spec.email         = ["fdavidcl@outlook.com"]
 
