@@ -31,7 +31,7 @@ module FeatureSelection
 
     private
     def select_next
-      @remaining.reduce([false, 0]) do |(best, fitness), feature|
+      @remaining.reduce([false, @fitness]) do |(best, fitness), feature|
         # Evaluate current feature
         new_fitness = @classifier.fitness_for(@solution + [feature])
 
