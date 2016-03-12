@@ -10,6 +10,7 @@ module FeatureSelection
         if (!("class" %in% installed.packages()[, "Package"]))
           install.packages("class")
         library(class)
+        library(parallel)
       }
       # @rng = Random.new 1
 
@@ -27,14 +28,15 @@ module FeatureSelection
 
         # Calculate fitness: Proportion of correctly classified instances
         # when leaving them out of the training data
-        mean(sapply(seq(1, length(dataset[, 1])), function(instance_index) {
+
+        mean(as.numeric(mclapply(seq(1, length(dataset[, 1])), function(instance_index) {
           knn(
             train = dataset[-instance_index, -class_col],
             test = dataset[instance_index, -class_col],
             cl = dataset[-instance_index, class_col],
             k
           ) == dataset[instance_index, class_col] # we may need to set use.all = FALSE
-        }))
+        })))
       }
     end
   end
