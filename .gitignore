@@ -44,3 +44,5 @@ build/
 /pkg/
 /spec/reports/
 /tmp/
+
+*.arff
