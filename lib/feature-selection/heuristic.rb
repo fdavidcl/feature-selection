@@ -1,7 +1,5 @@
 
 module FeatureSelection
-  NUMBER_NEIGHBORS = 3
-
   class Heuristic
     def initialize dataset
       @dataset = dataset
