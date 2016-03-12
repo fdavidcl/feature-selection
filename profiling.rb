@@ -4,10 +4,9 @@ require "bundler/setup"
 require "feature-selection"
 
 emotions = FeatureSelection::Dataset.read_arff("../../emotions.arff")
+iris = FeatureSelection::Dataset.data("iris")
 sfs = FeatureSelection::SeqForwardSelection.new emotions
-
-# iris = FeatureSelection::Dataset.data("iris")
-# sfs = FeatureSelection::SeqForwardSelection.new iris
+ls = FeatureSelection::LocalSearch.new emotions
 
 # profile the code
 result = RubyProf.profile do
