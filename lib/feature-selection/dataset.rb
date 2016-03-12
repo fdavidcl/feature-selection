@@ -20,7 +20,7 @@ module FeatureSelection
         raise ArgumentError, "We couldn't read the file #{filename}"
       end
 
-      self.new dataframe
+      self.new dataframe, File.basename(filename, ".*")
     end
 
     def self.data name
@@ -38,13 +38,14 @@ module FeatureSelection
         raise ArgumentError, "We couldn't get the dataset #{filename}"
       end
 
-      self.new dataframe
+      self.new dataframe, name
     end
 
     attr_accessor :dataframe
 
-    def initialize dataframe = {}.to_dataframe
+    def initialize dataframe = {}.to_dataframe, name = ""
       @dataframe = dataframe
+      @name = name.empty? ? "(no name)" : name
     end
 
     # def features
@@ -54,6 +55,18 @@ module FeatureSelection
     def num_features
       # Count all input features
       @dataframe.data.length - 1
+    end
+
+    def num_instances
+      @dataframe.data.first.length
+    end
+
+    def to_s
+      "Dataset #{@name} (#{num_instances} instances, #{num_features} features)"
+    end
+
+    def inspect
+      to_s
     end
   end
 end
