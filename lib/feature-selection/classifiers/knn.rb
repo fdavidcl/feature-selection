@@ -11,6 +11,30 @@ module FeatureSelection
           install.packages("class")
         library(class)
         library(parallel)
+        library(compiler)
+
+        .fitness <- function(k, dataset, features) {
+          # Assume the class is the last column
+          # Restrict to current features
+          dataset <- dataset[c(features + 1, length(original))]
+          class_col_num <- length(dataset)
+
+          no_class <- dataset[-class_col_num]
+          class_col <- dataset[[class_col_num]]
+
+          # Calculate fitness: Proportion of correctly classified instances
+          # when leaving them out of the training data
+          mean(as.numeric(mclapply(seq(1, length(class_col)), function(instance_index) {
+            knn(
+              train = no_class[-instance_index,],
+              test = no_class[instance_index,],
+              cl = class_col[-instance_index],
+              k
+            ) == class_col[instance_index] # we may need to set use.all = FALSE
+          })))
+        }
+        fitness <- cmpfun(.fitness)
+
       }
       # @rng = Random.new 1
 
@@ -19,25 +43,7 @@ module FeatureSelection
     end
 
     def fitness_for features = [0]
-      @r >> %Q{
-        # Assume the class is the last column
-        # Restrict to current features
-        features <- c(#{features.join(",")})
-        dataset <- original[c(features + 1, length(original))]
-        class_col <- length(dataset)
-
-        # Calculate fitness: Proportion of correctly classified instances
-        # when leaving them out of the training data
-
-        mean(as.numeric(mclapply(seq(1, length(dataset[, 1])), function(instance_index) {
-          knn(
-            train = dataset[-instance_index, -class_col],
-            test = dataset[instance_index, -class_col],
-            cl = dataset[-instance_index, class_col],
-            k
-          ) == dataset[instance_index, class_col] # we may need to set use.all = FALSE
-        })))
-      }
+      @r >> "fitness(k, original, c(#{features.join(",")}))"
     end
   end
 end
