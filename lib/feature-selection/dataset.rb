@@ -23,6 +23,24 @@ module FeatureSelection
       self.new dataframe
     end
 
+    def self.data name
+      r = Rserve::Simpler.new
+      begin
+        data = r >> %Q{
+          data(#{name})
+          #{name}
+        }
+
+        # Converts output to a Dataframe object
+        dataframe = data.names.zip(data).to_h.to_dataframe
+      rescue Rserve::Connection::EvalError
+        # Assume the problem was caused by the user
+        raise ArgumentError, "We couldn't get the dataset #{filename}"
+      end
+
+      self.new dataframe
+    end
+
     attr_accessor :dataframe
 
     def initialize dataframe = {}.to_dataframe
