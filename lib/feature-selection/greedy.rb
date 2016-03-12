@@ -7,7 +7,7 @@ module FeatureSelection
 
       @solution = []
       @fitness = 0
-      @remaining = (0..@dataset.num_features - 1).to_a
+      @remaining = (0 ... @dataset.num_features).to_a
     end
 
     def run
