@@ -58,7 +58,8 @@ module FeatureSelection
     end
 
     def num_instances
-      @dataframe.data.first.length
+      # Length of the first column
+      @dataframe.data.first.last.length
     end
 
     def to_s
