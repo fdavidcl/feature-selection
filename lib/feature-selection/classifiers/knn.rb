@@ -10,7 +10,6 @@ module FeatureSelection
         if (!("class" %in% installed.packages()[, "Package"]))
           install.packages("class")
         library(class)
-        library(parallel)
         library(compiler)
 
         .fitness <- function(k, dataset, features) {
@@ -22,16 +21,7 @@ module FeatureSelection
           no_class <- dataset[-class_col_num]
           class_col <- dataset[[class_col_num]]
 
-          # Calculate fitness: Proportion of correctly classified instances
-          # when leaving them out of the training data
-          mean(as.numeric(mclapply(seq(1, length(class_col)), function(instance_index) {
-            knn(
-              train = no_class[-instance_index,],
-              test = no_class[instance_index,],
-              cl = class_col[-instance_index],
-              k
-            ) == class_col[instance_index] # we may need to set use.all = FALSE
-          }, mc.cores = detectCores(logical = FALSE))))
+          mean(knn.cv(no_class, class_col, k = 3) == class_col)
         }
         fitness <- cmpfun(.fitness)
 
