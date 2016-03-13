@@ -15,9 +15,9 @@ module FeatureSelection
 
       while improving do
         feature, fitness = select_next
-        puts "Next feature selected: #{feature} with fitness #{fitness}"
 
         if feature
+          puts "Next feature selected: #{feature} with fitness #{fitness}"
           @solution << feature
           @remaining.delete feature
           @fitness = fitness
