@@ -6,5 +6,4 @@ end
 
 require "feature-selection/version"
 require "feature-selection/classifiers"
-require "feature-selection/greedy"
-require "feature-selection/local_search"
+require "feature-selection/heuristics"
