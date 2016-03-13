@@ -16,7 +16,7 @@ module FeatureSelection
         .fitness <- function(k, dataset, features) {
           # Assume the class is the last column
           # Restrict to current features
-          dataset <- dataset[c(features + 1, length(original))]
+          dataset <- dataset[c(features + 1, length(dataset))]
           class_col_num <- length(dataset)
 
           no_class <- dataset[-class_col_num]
@@ -31,7 +31,7 @@ module FeatureSelection
               cl = class_col[-instance_index],
               k
             ) == class_col[instance_index] # we may need to set use.all = FALSE
-          })))
+          }, mc.cores = detectCores(logical = FALSE))))
         }
         fitness <- cmpfun(.fitness)
 
