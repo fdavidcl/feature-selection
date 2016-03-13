@@ -57,12 +57,12 @@ module FeatureSelection
       solution = BitArray.new(size)
 
       # Method 1: Randomly set each bit to 0 or 1
-      # (0..size - 1).each do |i|
-      #   solution.set_bit(i) if @rng.rand(2) == 1
-      # end
+      (0..size - 1).each do |i|
+        solution.set_bit(i) if @rng.rand(2) == 1
+      end
 
       # Method 2: Set a random sample of bits
-      (0 ... size).to_a.sample(@rng.rand(size), random: @rng).each{ |i| solution.set_bit i }
+      # (0 ... size).to_a.sample(@rng.rand(size), random: @rng).each{ |i| solution.set_bit i }
 
       solution
     end
