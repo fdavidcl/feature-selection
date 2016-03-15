@@ -32,8 +32,8 @@ module FeatureSelection
     end
 
     private
-    def select_next
-      neighborhood = Enumerator.new do |yielder|
+    def neighborhood
+      Enumerator.new do |yielder|
         attempt = @solution.clone
 
         # Randomly generate the neighborhood by flipping each bit in the solution
@@ -45,10 +45,6 @@ module FeatureSelection
 
           attempt.toggle_bit(f)
         end
-      end
-
-      neighborhood.detect do |(attempt, fitness)|
-        fitness > @fitness
       end
     end
 
