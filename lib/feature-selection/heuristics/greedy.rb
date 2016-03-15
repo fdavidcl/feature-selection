@@ -1,4 +1,13 @@
+require "bitarray"
 require_relative "heuristic"
+
+class Array
+  def to_bitarray len = max + 1
+    BitArray.new(len).tap do |b|
+      each { |i| b.set_bit i }
+    end
+  end
+end
 
 module FeatureSelection
   class SeqForwardSelection < Heuristic
@@ -7,7 +16,7 @@ module FeatureSelection
 
       @solution = []
       @fitness = 0
-      @remaining = (0 ... @dataset.num_features).to_a
+      @remaining = [* 0 ... @dataset.input_count]
     end
 
     def run
@@ -26,7 +35,7 @@ module FeatureSelection
         end
       end
 
-      [@solution, @fitness]
+      [@solution.to_bitarray(@dataset.input_count), @fitness]
     end
 
     private

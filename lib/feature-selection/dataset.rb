@@ -3,7 +3,7 @@ require 'rserve/simpler'
 module FeatureSelection
   class Dataset
     # Class method: Reads an ARFF file and returns a Dataset out of it
-    def self.read_arff filename
+    def self.read_arff filename, class_col = nil
       r = Rserve::Simpler.new
       begin
         data = r >> %Q{
@@ -20,10 +20,10 @@ module FeatureSelection
         raise ArgumentError, "We couldn't read the file #{filename}"
       end
 
-      self.new dataframe, File.basename(filename, ".*")
+      self.new dataframe, class_col, File.basename(filename, ".*")
     end
 
-    def self.data name
+    def self.data name, class_col = nil
       r = Rserve::Simpler.new
       begin
         data = r >> %Q{
@@ -38,23 +38,25 @@ module FeatureSelection
         raise ArgumentError, "We couldn't get the dataset #{filename}"
       end
 
-      self.new dataframe, name
+      self.new dataframe, class_col, name
     end
 
-    attr_accessor :dataframe
+    attr_reader :dataframe, :class_col
 
-    def initialize dataframe = {}.to_dataframe, name = ""
+    def initialize dataframe = {}.to_dataframe, class_col = nil, name = ""
       @dataframe = dataframe
+      # Assume class is last column by default
+      @class_col = class_col || dataframe.data.length - 1
       @name = name.empty? ? "(no name)" : name
     end
 
-    # def features
-    #   @dataframe.data.keys
-    # end
-
-    def num_features
+    def input_count
       # Count all input features
       @dataframe.data.length - 1
+    end
+
+    def inputs
+      (0 ... @dataframe.data.length).to_a.tap{ |a| a.delete class_col }
     end
 
     def num_instances
@@ -63,7 +65,7 @@ module FeatureSelection
     end
 
     def to_s
-      "Dataset #{@name} (#{num_instances} instances, #{num_features} features)"
+      "Dataset #{@name} (#{num_instances} instances, #{input_count} input features, class column: #{class_col})"
     end
 
     def inspect

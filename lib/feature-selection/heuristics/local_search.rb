@@ -28,7 +28,7 @@ module FeatureSelection
         next_one = select_next
       end
 
-      [@solution.ones, @fitness]
+      [@solution, @fitness]
     end
 
     private
@@ -53,7 +53,7 @@ module FeatureSelection
     end
 
     def random_solution
-      size = @dataset.num_features
+      size = @dataset.input_count
       solution = BitArray.new(size)
 
       # Method 1: Randomly set each bit to 0 or 1
