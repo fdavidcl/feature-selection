@@ -34,33 +34,29 @@ module FeatureSelection
     private
     def neighborhood
       Enumerator.new do |yielder|
-        attempt = @solution.clone
-
         # Randomly generate the neighborhood by flipping each bit in the solution
         (0 ... @solution.length).to_a.shuffle!(random: @rng).each do |f|
+          attempt = @solution.clone.toggle_bit(f)
+
           yielder << [
-            attempt.toggle_bit(f),
+            attempt,
             @classifier.fitness_for(attempt.ones)
           ]
-
-          attempt.toggle_bit(f)
         end
       end
     end
 
     def random_solution
       size = @dataset.input_count
-      solution = BitArray.new(size)
+      BitArray.new(size).tap do |solution|
+        # Method 1: Randomly set each bit to 0 or 1
+        (0..size - 1).each do |i|
+          solution.set_bit(i) if @rng.rand(2) == 1
+        end
 
-      # Method 1: Randomly set each bit to 0 or 1
-      (0..size - 1).each do |i|
-        solution.set_bit(i) if @rng.rand(2) == 1
+        # Method 2: Set a random sample of bits
+        # (0 ... size).to_a.sample(@rng.rand(size), random: @rng).each{ |i| solution.set_bit i }
       end
-
-      # Method 2: Set a random sample of bits
-      # (0 ... size).to_a.sample(@rng.rand(size), random: @rng).each{ |i| solution.set_bit i }
-
-      solution
     end
   end
 end
