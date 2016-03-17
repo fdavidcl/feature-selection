@@ -10,13 +10,14 @@ class Array
 end
 
 module FeatureSelection
-  class SeqForwardSelection < Heuristic
-    def initialize dataset
-      super
+  class SequentialSelection < Heuristic
+    def initialize dataset, forward = true
+      super(dataset)
 
       @solution = []
       @fitness = 0
       @remaining = [* 0 ... @dataset.input_count]
+      @forward = forward
     end
 
     def run
@@ -35,14 +36,18 @@ module FeatureSelection
         end
       end
 
-      [@solution.to_bitarray(@dataset.input_count), @fitness]
+      [
+        (@forward ? @solution : @remaining).to_bitarray(@dataset.input_count),
+        @fitness
+      ]
     end
 
     private
     def select_next
       @remaining.reduce([false, @fitness]) do |(best, fitness), feature|
+        next_attempt = @forward ? @solution + [feature] : @remaining - [feature]
         # Evaluate current feature
-        new_fitness = @classifier.fitness_for(@solution + [feature])
+        new_fitness = @classifier.fitness_for(next_attempt)
 
         # Choose the best feature
         if new_fitness > fitness
