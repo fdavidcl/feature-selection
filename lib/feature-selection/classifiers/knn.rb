@@ -12,6 +12,8 @@ module FeatureSelection
         library(class)
         library(compiler)
 
+        set.seed(random_seed)
+
         inputs <- seq(1, length(dataset))[-class_col_num]
         class_col <- dataset[[class_col_num]]
 
@@ -23,7 +25,13 @@ module FeatureSelection
         }
         fitness <- cmpfun(.fitness)
 
-      }, dataset: dataset.dataframe, class_col_num: dataset.class_col + 1, k: k
+      },
+      {
+        random_seed: RANDOM_SEED,
+        dataset: dataset.dataframe,
+        class_col_num: dataset.class_col + 1,
+        k: k
+      }
     end
 
     def fitness_for features
