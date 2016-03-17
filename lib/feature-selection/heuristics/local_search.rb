@@ -21,7 +21,7 @@ module FeatureSelection
       @fitness = @classifier.fitness_for(@solution.ones)
       next_one = [@solution, @fitness]
 
-      while !next_one.nil?
+      until next_one.nil?
         # Save previous valid solution and find the next
         @solution, @fitness = next_one
         puts "Next solution: #{@solution} with fitness #{@fitness}"
