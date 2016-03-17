@@ -44,9 +44,17 @@ module FeatureSelection
     attr_reader :dataframe, :class_col
 
     def initialize dataframe = {}.to_dataframe, class_col = nil, name = ""
+      # Dataframes are stored as a hash of columns, like so:
+      #   dataframe.data =
+      #     {
+      #       "attribute1" => [ value_1, value_2, ... ]
+      #       "attribute2" => [ value_1, value_2, ... ]
+      #       "class"      => [ 0, 1, ... ]
+      #     }
       @dataframe = dataframe
       # Assume class is last column by default
       @class_col = class_col || dataframe.data.length - 1
+      @class_name = @dataframe.data.keys[@class_col]
       @name = name.empty? ? "(no name)" : name
     end
 
@@ -62,6 +70,29 @@ module FeatureSelection
     def num_instances
       # Length of the first column
       @dataframe.data.first.last.length
+    end
+
+    def instances
+      # Get instances by transposing data matrix
+      @dataframe.data.to_a.map(&:last).transpose
+    end
+
+    # Stratified partitioning
+    def partition num_partitions
+      # Save names for later
+      names = @dataframe.data.keys
+      # Group instances by class
+      strata = instances.group_by{ |i| i[class_col] }.values
+
+      strata.map do |str|
+        # Randomly distribute instances from each stratum onto partitions
+        str.shuffle(random: RNG).each_slice((str.length - 1)/num_partitions + 1).to_a
+      end.transpose.map.each_with_index do |p, i|
+        # Get all instances together and convert to columns
+        cols = p.flatten(1).transpose
+        # Convert to dataframe, generate new dataset for each partition
+        Dataset.new(names.zip(cols).to_h.to_dataframe, class_col, "#{@name}_p#{i}")
+      end
     end
 
     def to_s
