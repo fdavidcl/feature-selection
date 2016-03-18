@@ -82,9 +82,9 @@ module FeatureSelection
       # Save names for later
       names = @dataframe.data.keys
       # Group instances by class
-      strata = instances.group_by{ |i| i[class_col] }.values
+      strata = instances.group_by{ |i| i[class_col] }
 
-      strata.map do |str|
+      strata.each_value.map do |str|
         # Randomly distribute instances from each stratum onto partitions
         str.shuffle(random: RNG).each_slice((str.length - 1)/num_partitions + 1).to_a
       end.transpose.map.each_with_index do |p, i|
