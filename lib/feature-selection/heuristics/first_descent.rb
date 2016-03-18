@@ -1,7 +1,8 @@
-require_relative "local_search"
+require_relative "monotonic_search"
 
 module FeatureSelection
-  class FirstDescent < LocalSearch
+  class FirstDescent < MonotonicSearch
+    private
     def select_next
       neighborhood.detect do |attempt, fitness|
         fitness > @fitness
