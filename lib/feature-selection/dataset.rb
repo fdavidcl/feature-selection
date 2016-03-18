@@ -78,7 +78,7 @@ module FeatureSelection
     end
 
     # Stratified partitioning
-    def partition num_partitions
+    def partition num_partitions, random: Random.new(RANDOM_SEED)
       # Save names for later
       names = @dataframe.data.keys
       # Group instances by class
@@ -86,7 +86,7 @@ module FeatureSelection
 
       strata.each_value.map do |str|
         # Randomly distribute instances from each stratum onto partitions
-        str.shuffle(random: RNG).each_slice((str.length - 1)/num_partitions + 1).to_a
+        str.shuffle(random: random).each_slice((str.length - 1)/num_partitions + 1).to_a
       end.transpose.map.each_with_index do |p, i|
         # Get all instances together and convert to columns
         cols = p.flatten(1).transpose
@@ -99,7 +99,7 @@ module FeatureSelection
       "Dataset #{@name} (#{num_instances} instances, #{input_count} input features, class column: #{class_col})"
     end
 
-    def inspect
+    def display
       to_s
     end
   end
