@@ -23,6 +23,6 @@ module FeatureSelection
       @classifier = KNearest.new NUMBER_NEIGHBORS, @dataset
     end
 
-    attr_reader :dataset
+    attr_reader :dataset, :classifier
   end
 end
