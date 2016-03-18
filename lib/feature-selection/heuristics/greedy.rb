@@ -1,14 +1,6 @@
 require "bitarray"
 require_relative "heuristic"
 
-class Array
-  def to_bitarray len = max + 1
-    BitArray.new(len).tap do |b|
-      each { |i| b.set_bit i }
-    end
-  end
-end
-
 module FeatureSelection
   class SequentialSelection < Heuristic
     def initialize dataset, forward = true
