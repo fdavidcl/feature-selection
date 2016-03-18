@@ -3,7 +3,7 @@ require_relative "heuristic"
 
 module FeatureSelection
   class SequentialSelection < Heuristic
-    def initialize dataset, forward = true
+    def initialize dataset, forward
       super(dataset)
 
       @solution = []
@@ -48,6 +48,18 @@ module FeatureSelection
           [best, fitness]
         end
       end
+    end
+  end
+
+  class SeqForwardSelection < SequentialSelection
+    def initialize dataset
+      super(dataset, true)
+    end
+  end
+  
+  class SeqBackwardSelection < SequentialSelection
+    def initialize dataset
+      super(dataset, false)
     end
   end
 end
