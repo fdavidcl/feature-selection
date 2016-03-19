@@ -39,7 +39,7 @@ module FeatureSelection
       @remaining.reduce([false, @fitness]) do |(best, fitness), feature|
         next_attempt = @forward ? @solution + [feature] : @remaining - [feature]
         # Evaluate current feature
-        new_fitness = @classifier.fitness_for(next_attempt)
+        new_fitness = @classifier.fitness_for(next_attempt.to_bitarray)
 
         # Choose the best feature
         if new_fitness > fitness
@@ -56,7 +56,7 @@ module FeatureSelection
       super(dataset, true)
     end
   end
-  
+
   class SeqBackwardSelection < SequentialSelection
     def initialize dataset
       super(dataset, false)

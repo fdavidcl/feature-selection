@@ -12,7 +12,7 @@ module FeatureSelection
 
     def run
       # initialize with current solution
-      @fitness = @classifier.fitness_for(@solution.ones)
+      @fitness = @classifier.fitness_for(@solution)
       outer_loop
 
       [@solution, @fitness]
@@ -41,7 +41,8 @@ module FeatureSelection
 
           yielder << [
             attempt,
-            @classifier.fitness_for(attempt.ones)
+            @classifier.fitness_for(attempt),
+            f
           ]
         end
       end

@@ -1,5 +1,5 @@
 require "bitarray"
-require_relative "heuristic"
+require_relative "monotonic_search"
 
 module FeatureSelection
   class LocalSearch < MonotonicSearch
@@ -11,7 +11,7 @@ module FeatureSelection
 
     def run
       # initialize with current solution
-      @best_fitness = @fitness = @classifier.fitness_for(@solution.ones)
+      @best_fitness = @fitness = @classifier.fitness_for(@solution)
       outer_loop
 
       [@best_solution, @best_fitness]

@@ -6,7 +6,7 @@ module FeatureSelection
       super
 
       worsening = prob_accept = 0.3
-      @initial_temp = worsening * @classifier.fitness_for(@solution.ones) / -Math.log(prob_accept)
+      @initial_temp = worsening * @classifier.fitness_for(@solution) / -Math.log(prob_accept)
       @final_temp = 1e-3
       @max_generated = 10 * @dataset.input_count
       @max_selections = 0.1 * @dataset.input_count

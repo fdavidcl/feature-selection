@@ -1,6 +1,6 @@
 require 'rserve/simpler'
-require 'feature-selection/dataset'
 require 'matrix' # Needed to pass dataset through R connection
+require "feature-selection/heuristics/heuristic"
 
 module FeatureSelection
   class KNearest < Classifier
@@ -18,10 +18,8 @@ module FeatureSelection
         class_col <- dataset[[class_col_num]]
 
         .fitness <- function(features) {
-          # Assume the class is the last column
           # Restrict to current features
-          no_class <- dataset[inputs[features]]
-          mean(knn.cv(no_class, class_col, k = 3) == class_col)
+          mean(knn.cv(dataset[inputs[features]], class_col, k = 3) == class_col)
         }
         fitness <- cmpfun(.fitness)
 
@@ -32,10 +30,12 @@ module FeatureSelection
         class_col_num: dataset.class_col + 1,
         k: k
       }
+
+      @cache = {}
     end
 
     def fitness_for features
-      @r >> "fitness(c(#{features.join(",")} + 1))"
+      @r >> "fitness(c(#{features.ones.join(",")} + 1))"
     end
   end
 end

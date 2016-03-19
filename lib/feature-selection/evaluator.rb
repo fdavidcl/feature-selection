@@ -15,12 +15,12 @@ module FeatureSelection
       results = (partitions + partitions.map(&:reverse)).map do |train, test|
         heuristic = heuristic_class.new(train)
         solution, fitness = heuristic.run
-        evaluation = heuristic.classifier.class.new(NUMBER_NEIGHBORS, test).fitness_for(solution.ones)
+        evaluation = heuristic.classifier.class.new(NUMBER_NEIGHBORS, test).fitness_for(solution)
 
         [solution, fitness, evaluation]
       end
 
-      ["Solution", "Training fitness", "Test fitness"].zip(results.transpose)
+      [:solution, :training, :test].zip(results.transpose).to_h
     end
   end
 end
