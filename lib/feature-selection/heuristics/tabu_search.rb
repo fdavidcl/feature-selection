@@ -1,7 +1,7 @@
-require_relative "local_search"
+require_relative "basic_tabu_search"
 
 module FeatureSelection
-  class TabuSearch < LocalSearch
+  class TabuSearch < BasicTabuSearch
 
   end
 end
