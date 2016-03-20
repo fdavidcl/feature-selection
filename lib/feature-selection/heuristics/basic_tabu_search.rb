@@ -13,6 +13,10 @@ module FeatureSelection
 
     private
     def outer_loop
+      short_term
+    end
+
+    def short_term
       @num_iterations.times do
         solution, fitness, index = select_next
         self.solution = [solution, fitness]
