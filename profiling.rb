@@ -3,9 +3,9 @@ require 'ruby-prof'
 require "bundler/setup"
 require "feature-selection"
 
-arr = FeatureSelection::Dataset.read_arff("../../arrhythmia.arff")
-mlibras = FeatureSelection::Dataset.read_arff("../../movement_libras.arff")
-wdbc = FeatureSelection::Dataset.read_arff("../../wdbc.arff", 0)
+arr = FeatureSelection::Dataset.read_arff("../../data/arrhythmia.arff")
+mlibras = FeatureSelection::Dataset.read_arff("../../data/movement_libras.arff")
+wdbc = FeatureSelection::Dataset.read_arff("../../data/wdbc.arff", 0)
 iris = FeatureSelection::Dataset.data("iris")
 
 arr.tap do |dataset|
