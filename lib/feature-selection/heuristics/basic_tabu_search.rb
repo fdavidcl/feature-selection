@@ -13,17 +13,17 @@ module FeatureSelection
 
     private
     def outer_loop
-      short_term
+      @num_iterations.times do
+        short_term
+      end
     end
 
     def short_term
-      @num_iterations.times do
-        solution, fitness, index = select_next
-        self.solution = [solution, fitness]
-        @tabu_list.unshift index
-        @tabu_list.pop unless @tabu_list.length < @max_tabu_length
-        puts @tabu_list.to_s
-      end
+      solution, fitness, index = select_next
+      self.solution = [solution, fitness]
+      @tabu_list.unshift index
+      @tabu_list.pop unless @tabu_list.length < @max_tabu_length
+      puts @tabu_list.to_s
     end
 
     def select_next
