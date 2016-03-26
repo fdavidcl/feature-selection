@@ -8,12 +8,15 @@ module FeatureSelection
     def initialize folds: 2, repeats: 5
       @folds = folds
       @repeats = repeats
+      @rng = Random.new(RANDOM_SEED)
+      @seeds = (0 ... folds * repeats).map{ |i| @rng.rand(1 .. 13370000) }
+      puts "Evaluator object using seeds #{@seeds.join ", "}."
     end
 
     def evaluate heuristic_class, dataset, csv: false
       partitions = (0 ... repeats).map{ dataset.partition @folds, random: FeatureSelection::RNG }
-      results = (partitions + partitions.map(&:reverse)).map do |train, test|
-        heuristic = heuristic_class.new(train)
+      results = partitions.zip(partitions.map(&:reverse)).flatten(1).map.each_with_index do |(train, test), index|
+        heuristic = heuristic_class.new(train, random: Random.new(@seeds[index]))
         start = Time.now
         solution, fitness = heuristic.run
         finish = Time.now
@@ -26,7 +29,7 @@ module FeatureSelection
       names = [:solution, :training, :test, :reduction, :time]
 
       if csv
-        results.prepend(names).map{ |row| row.join ", " }.join("\n")
+        ([names] + results).map{ |row| row.join ", " }.join("\n")
       else
         names.zip(results.transpose).to_h
       end

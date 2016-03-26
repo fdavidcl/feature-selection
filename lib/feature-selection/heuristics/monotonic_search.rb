@@ -4,10 +4,10 @@ require_relative "heuristic"
 
 module FeatureSelection
   class MonotonicSearch < Heuristic
-    def initialize dataset
+    def initialize dataset, debug: false, random: Random.new(RANDOM_SEED)
       super
 
-      @rng = Random.new RANDOM_SEED
+      @rng = Random.new(RANDOM_SEED)
       @solution = random_solution
     end
 
@@ -21,7 +21,7 @@ module FeatureSelection
 
     def solution= new_solution
       @solution, @fitness = new_solution
-      puts "Better solution: #{@solution} with fitness #{@fitness}"
+      puts "Better solution: #{@solution} with fitness #{@fitness}" if @debug
     end
 
     private

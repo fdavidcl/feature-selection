@@ -3,7 +3,7 @@ require_relative "heuristic"
 
 module FeatureSelection
   class NoSelection < Heuristic
-    def initialize dataset
+    def initialize dataset, debug: false, random: Random.new(RANDOM_SEED)
       super
 
       @solution = BitArray.new(@dataset.input_count).tap{ |b| b.set_all_bits }

@@ -8,7 +8,7 @@ mlibras = FeatureSelection::Dataset.read_arff("../../data/movement_libras.arff")
 wdbc = FeatureSelection::Dataset.read_arff("../../data/wdbc.arff", 0)
 iris = FeatureSelection::Dataset.data("iris")
 
-arr.tap do |dataset|
+[iris, wdbc, mlibras, arr].each do |dataset|
   puts "Using #{dataset}."
 
   # result = RubyProf.profile do
@@ -19,29 +19,32 @@ arr.tap do |dataset|
 
   heuristics = {
     "No selection (kNN with all features)" => FeatureSelection::NoSelection,
-    #"Sequential Forward Selection" => FeatureSelection::SeqForwardSelection,
-    #"Sequential Backward Selection" => FeatureSelection::SeqBackwardSelection,
-    #"First-descent Local Search" => FeatureSelection::FirstDescent,
-    #"Maximum-descent Local Search" => FeatureSelection::MaximumDescent,
-    #"Simulated Annealing" => FeatureSelection::SimAnnealing,
-    #"Basic Tabu Search" => FeatureSelection::BasicTabuSearch,
+    "Sequential Forward Selection" => FeatureSelection::SeqForwardSelection,
+    "Sequential Backward Selection" => FeatureSelection::SeqBackwardSelection,
+    "First-descent Local Search" => FeatureSelection::FirstDescent,
+    "Maximum-descent Local Search" => FeatureSelection::MaximumDescent,
+    "Simulated Annealing" => FeatureSelection::SimAnnealing,
+    "Basic Tabu Search" => FeatureSelection::BasicTabuSearch,
     "Complete Tabu Search" => FeatureSelection::TabuSearch
   }
 
-  ev = FeatureSelection::Evaluator.new folds: 2, repeats: 1
+  ev = FeatureSelection::Evaluator.new folds: 2, repeats: 5
 
   # profile the code
   #result = RubyProf.profile do
   heuristics.each do |name, heuristic|
     puts "", "-" * 80, "|#{name.center(78)}|", "-" * 80
-    t1 = Time.now
-    results = ev.evaluate heuristic, dataset
-    t2 = Time.now
-    puts "-" * 80, "Summary".center(80)
-    puts "Fitness in training (mean): #{results[:training].reduce(&:+)/results[:training].length}"
-    puts "Fitness in test (mean): #{results[:test].reduce(&:+)/results[:test].length}"
-    puts "Reduction ratio: #{results[:reduction].reduce(&:+)/results[:reduction].length}"
-    puts "Time spent: total #{results[:time].reduce(&:+)}, mean #{results[:time].reduce(&:+)/results[:time].length}"
+    results = ev.evaluate heuristic, dataset, csv: true
+    puts results
+
+    output = File.new("out/#{dataset.name}_#{heuristic.name}_#{Time.now.xmlschema}.log", "w")
+    output << results
+    output.close
+    #puts "-" * 80, "Summary".center(80)
+    # puts "Fitness in training (mean): #{results[:training].reduce(&:+)/results[:training].length}"
+    # puts "Fitness in test (mean): #{results[:test].reduce(&:+)/results[:test].length}"
+    # puts "Reduction ratio: #{results[:reduction].reduce(&:+)/results[:reduction].length}"
+    # puts "Time spent: total #{results[:time].reduce(&:+)}, mean #{results[:time].reduce(&:+)/results[:time].length}"
   end
   #end
 

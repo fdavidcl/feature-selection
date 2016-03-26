@@ -1,7 +1,7 @@
 
 module FeatureSelection
   RANDOM_SEED = 1
-  RNG = Random.new RANDOM_SEED
+  RNG = Random.new(RANDOM_SEED)
   NUMBER_NEIGHBORS = 3
 end
 
