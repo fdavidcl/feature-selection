@@ -3,7 +3,7 @@ set -euo pipefail
 IFS=$'\n\t'
 set -vx
 
-R -e "install.packages('Rserve')"
+R -e "install.packages('Rserve', repos='http://cran.r-project.org')"
 
 gem install bundler
 bundle install
