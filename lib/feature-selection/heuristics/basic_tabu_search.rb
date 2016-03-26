@@ -2,7 +2,7 @@ require_relative "local_search"
 
 module FeatureSelection
   class BasicTabuSearch < LocalSearch
-    def initialize dataset
+    def initialize dataset, debug: false
       super
 
       @tabu_list = []
@@ -23,7 +23,7 @@ module FeatureSelection
       self.solution = [solution, fitness]
       @tabu_list.unshift index
       @tabu_list.pop unless @tabu_list.length < @max_tabu_length
-      puts @tabu_list.to_s
+      puts @tabu_list.to_s if @debug
     end
 
     def select_next

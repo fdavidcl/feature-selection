@@ -26,7 +26,7 @@ module FeatureSelection
       names = [:solution, :training, :test, :reduction, :time]
 
       if csv
-        results.prepend(names).map{ |row| row.join ", " }.join("\n")
+        ([names] + results).map{ |row| row.join ", " }.join("\n")
       else
         names.zip(results.transpose).to_h
       end

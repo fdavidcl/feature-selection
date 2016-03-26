@@ -3,7 +3,7 @@ require_relative "monotonic_search"
 
 module FeatureSelection
   class LocalSearch < MonotonicSearch
-    def initialize dataset
+    def initialize dataset, debug: false
       super
 
       @best_solution = @solution
@@ -22,7 +22,7 @@ module FeatureSelection
 
       if @fitness > @best_fitness
         @best_solution, @best_fitness = @solution, @fitness
-        puts "Better solution: #{@best_solution} with fitness #{@best_fitness}"
+        puts "Better solution: #{@best_solution} with fitness #{@best_fitness}" if @debug
       end
     end
   end

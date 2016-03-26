@@ -17,7 +17,8 @@ end
 
 module FeatureSelection
   class Heuristic
-    def initialize dataset
+    def initialize dataset, debug: false
+      @debug = debug
       @rng = Random.new RANDOM_SEED
       @dataset = dataset
       @classifier = KNearest.new NUMBER_NEIGHBORS, @dataset

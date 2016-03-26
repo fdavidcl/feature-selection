@@ -2,7 +2,7 @@ require_relative "basic_tabu_search"
 
 module FeatureSelection
   class TabuSearch < BasicTabuSearch
-    def initialize dataset
+    def initialize dataset, debug: false
       super
 
       @frequencies = Array.new @solution.length, 0
