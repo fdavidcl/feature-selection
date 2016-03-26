@@ -77,6 +77,15 @@ module FeatureSelection
       @dataframe.data.to_a.map(&:last).transpose
     end
 
+    def take amount
+      names = @dataframe.data.keys
+      Dataset.new(names.zip(instances.take(amount).transpose).to_h.to_dataframe, class_col, "#{@name}_take#{amount}")
+    end
+    def drop amount
+      names = @dataframe.data.keys
+      Dataset.new(names.zip(instances.drop(amount).transpose).to_h.to_dataframe, class_col, "#{@name}_take#{amount}")
+    end
+
     # Stratified partitioning
     def partition num_partitions, random: Random.new(RANDOM_SEED)
       # Save names for later
