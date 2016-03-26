@@ -41,7 +41,7 @@ module FeatureSelection
       self.new dataframe, class_col, name
     end
 
-    attr_reader :dataframe, :class_col
+    attr_reader :dataframe, :class_col, :name
 
     def initialize dataframe = {}.to_dataframe, class_col = nil, name = ""
       # Dataframes are stored as a hash of columns, like so:

@@ -2,7 +2,7 @@ require_relative "local_search"
 
 module FeatureSelection
   class BasicTabuSearch < LocalSearch
-    def initialize dataset, debug: false
+    def initialize dataset, debug: false, random: Random.new(RANDOM_SEED)
       super
 
       @tabu_list = []

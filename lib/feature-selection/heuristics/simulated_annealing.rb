@@ -2,7 +2,7 @@ require_relative "local_search"
 
 module FeatureSelection
   class SimAnnealing < LocalSearch
-    def initialize dataset, debug: false
+    def initialize dataset, debug: false, random: Random.new(RANDOM_SEED)
       super
 
       worsening = prob_accept = 0.3

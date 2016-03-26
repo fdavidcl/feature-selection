@@ -3,8 +3,8 @@ require_relative "heuristic"
 
 module FeatureSelection
   class SequentialSelection < Heuristic
-    def initialize dataset, forward, debug: false
-      super(dataset, debug: debug)
+    def initialize dataset, forward, debug: false, random: Random.new(RANDOM_SEED)
+      super(dataset, debug: debug, random: random)
 
       @solution = []
       @fitness = 0
@@ -23,6 +23,7 @@ module FeatureSelection
           @solution << feature
           @remaining.delete feature
           @fitness = fitness
+          improving = false if !@forward && @remaining.length == 1
         else
           improving = false
         end
@@ -52,14 +53,14 @@ module FeatureSelection
   end
 
   class SeqForwardSelection < SequentialSelection
-    def initialize dataset
-      super(dataset, true)
+    def initialize dataset, debug: false, random: Random.new(RANDOM_SEED)
+      super(dataset, true, debug: debug, random: random)
     end
   end
 
   class SeqBackwardSelection < SequentialSelection
-    def initialize dataset
-      super(dataset, false)
+    def initialize dataset, debug: false, random: Random.new(RANDOM_SEED)
+      super(dataset, false, debug: debug, random: random)
     end
   end
 end

@@ -3,7 +3,7 @@ require_relative "monotonic_search"
 
 module FeatureSelection
   class LocalSearch < MonotonicSearch
-    def initialize dataset, debug: false
+    def initialize dataset, debug: false, random: Random.new(RANDOM_SEED)
       super
 
       @best_solution = @solution
