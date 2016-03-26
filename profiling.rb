@@ -8,7 +8,7 @@ mlibras = FeatureSelection::Dataset.read_arff("../../data/movement_libras.arff")
 wdbc = FeatureSelection::Dataset.read_arff("../../data/wdbc.arff", 0)
 iris = FeatureSelection::Dataset.data("iris")
 
-arr.tap do |dataset|
+[iris, wdbc, mlibras, arr].each do |dataset|
   puts "Using #{dataset}."
 
   # result = RubyProf.profile do
@@ -36,6 +36,10 @@ arr.tap do |dataset|
     puts "", "-" * 80, "|#{name.center(78)}|", "-" * 80
     results = ev.evaluate heuristic, dataset, csv: true
     puts results
+
+    output = File.new("out/#{dataset.name}_#{heuristic.name}_#{Time.now.xmlschema}.log", "w")
+    output << results
+    output.close
     #puts "-" * 80, "Summary".center(80)
     # puts "Fitness in training (mean): #{results[:training].reduce(&:+)/results[:training].length}"
     # puts "Fitness in test (mean): #{results[:test].reduce(&:+)/results[:test].length}"
