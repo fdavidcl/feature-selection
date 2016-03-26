@@ -7,8 +7,8 @@ module FeatureSelection
     def initialize dataset, debug: false, random: Random.new(RANDOM_SEED)
       super
 
-      @rng = Random.new(RANDOM_SEED)
       @solution = random_solution
+      puts "Initial solution: #{@solution}" if @debug
     end
 
     def run
