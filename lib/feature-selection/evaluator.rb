@@ -16,7 +16,7 @@ module FeatureSelection
     def evaluate heuristic_class, dataset, csv: false
       partitions = (0 ... repeats).map{ dataset.partition @folds, random: FeatureSelection::RNG }
       results = partitions.zip(partitions.map(&:reverse)).flatten(1).map.each_with_index do |(train, test), index|
-        heuristic = heuristic_class.new(train, random: Random.new(@seeds[index]))
+        heuristic = heuristic_class.new(train, debug: DEBUG, random: Random.new(@seeds[index]))
         start = Time.now
         solution, fitness = heuristic.run
         finish = Time.now

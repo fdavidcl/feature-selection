@@ -3,6 +3,7 @@ module FeatureSelection
   RANDOM_SEED = 1
   RNG = Random.new(RANDOM_SEED)
   NUMBER_NEIGHBORS = 3
+  DEBUG = true
 end
 
 require "feature-selection/version"
