@@ -1,5 +1,4 @@
 require "bitarray"
-require "parallel"
 require_relative "heuristic"
 
 module FeatureSelection
@@ -49,18 +48,18 @@ module FeatureSelection
       end
     end
 
-    def parallel_neighborhood maximum
-      # Randomly generate the neighborhood by flipping each bit in the solution
-      Parallel.map((0 ... @solution.length).to_a.shuffle!(random: @rng).take(maximum)) do |f|
-        attempt = @solution.clone.toggle_bit(f)
-
-        [
-          attempt,
-          @classifier.fitness_for(attempt),
-          f
-        ]
-      end
-    end
+    # def parallel_neighborhood maximum
+    #   # Randomly generate the neighborhood by flipping each bit in the solution
+    #   Parallel.map((0 ... @solution.length).to_a.shuffle!(random: @rng).take(maximum)) do |f|
+    #     attempt = @solution.clone.toggle_bit(f)
+    #
+    #     [
+    #       attempt,
+    #       @classifier.fitness_for(attempt),
+    #       f
+    #     ]
+    #   end
+    # end
 
     def random_solution
       size = @dataset.input_count
