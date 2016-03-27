@@ -21,14 +21,21 @@ module FeatureSelection
     def short_term
       solution, fitness, index = select_next
       self.solution = [solution, fitness]
+
+      # Delete movement if it's already in the tabu list
+      @tabu_list.delete index
+      # Add movement to the front of the list
       @tabu_list.unshift index
+      # Remove elements from the list
       @tabu_list.pop unless @tabu_list.length < @max_tabu_length
       puts @tabu_list.to_s if @debug
     end
 
     def select_next
+      # Select the non-tabu neighbor with highest fitness (or a tabu neighbor
+      # if its fitness is higher than the global)
       neighborhood.take(@max_generated).max_by do |attempt, fitness, index|
-        if !@tabu_list.include?(index) || fitness > @fitness
+        if fitness > @best_fitness || !@tabu_list.include?(index)
           fitness
         else
           0
