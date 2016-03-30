@@ -14,7 +14,7 @@ module FeatureSelection
       super
 
       # Add selected solution to frequencies
-      @frequencies.each_with_index.map{ |e,i| e + new_solution[i] }
+      @frequencies.map!.each_with_index{ |freq, i| freq + @solution[i] }
       puts "freqs: #{@frequencies.to_s}" if @debug
       @solution_count += 1
     end
@@ -59,9 +59,10 @@ module FeatureSelection
     end
 
     def diverse_solution
-      (0 ... @dataset.input_count).select do |feature|
+      size = @solution.length
+      (0 ... size).select do |feature|
         @rng.rand < 1 - @frequencies[feature]/@solution_count
-      end.to_bitarray
+      end.to_bitarray(size)
     end
   end
 end

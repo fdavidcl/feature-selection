@@ -2,7 +2,7 @@ require "bitarray"
 
 # Additions to convert between arrays and bitarrays
 class Array
-  def to_bitarray len = max + 1
+  def to_bitarray len
     BitArray.new(len).tap do |b|
       each { |i| b.set_bit i }
     end
