@@ -13,7 +13,9 @@ module FeatureSelection
     def solution= new_solution
       super
 
-      @frequencies.map
+      # Add selected solution to frequencies
+      @frequencies.each_with_index.map{ |e,i| e + new_solution[i] }
+      puts "freqs: #{@frequencies.to_s}" if @debug
       @solution_count += 1
     end
 
