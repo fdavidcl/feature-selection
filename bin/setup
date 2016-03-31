@@ -43,6 +43,9 @@ install_ruby() {
     echo "Using Ruby $desired_version..."
     source ~/.profile
     rvm use $desired_version
+    return 0
+  ) || (
+    return -1
   )
 }
 
@@ -51,24 +54,7 @@ inform() {
   sleep 1
 }
 
-setup() {
-  inform "Searching for Ruby..."
-  which -a ruby && (
-    inform "OK! Checking Ruby version..."
-    local version=$(ruby -e "puts RUBY_VERSION")
-    inform "Current Ruby version is \"$version\"."
-    ruby -e "exit 1 unless RUBY_VERSION.start_with? '$desired_version'" && (
-      inform "OK!"
-    ) || (
-      install_ruby 2.3
-    )
-    inform "Installing dependencies..."
-    gem install bundler --conservative && bundle install
-  ) || (
-    inform "Couldn't find a Ruby installation"
-    install_ruby 2.3
-  )
-
+configure_r() {
   inform "Searching for R..."
   which -a R && (
     inform "OK! R found, installing dependencies..."
@@ -83,10 +69,39 @@ setup() {
       library(Rserve)
       Rserve(args = '--no-save')
 EOF
+    return 0
   ) || (
-    inform "\nCouldn't find an R installation. Please install R to continue. Aborting..."
-    exit -1
+    inform "Couldn't find an R installation. Please install R to continue. Aborting..."
+    return -1
   )
+}
+
+configure_ruby() {
+  inform "Searching for Ruby..."
+  which -a ruby && (
+    inform "OK! Checking Ruby version..."
+    local version=$(ruby -e "puts RUBY_VERSION")
+    inform "Current Ruby version is \"$version\"."
+    ruby -e "exit 1 unless RUBY_VERSION.start_with? '$desired_version'" && (
+      inform "OK!"
+    ) || (
+      install_ruby 2.3
+    )
+    inform "Installing dependencies..."
+    gem install bundler --conservative && bundle install
+    return 0
+  ) || (
+    inform "Couldn't find a Ruby installation"
+    install_ruby 2.3 || (
+      inform "Please install Ruby to continue. Aborting..."
+      return -2
+    )
+  )
+}
+
+setup() {
+  configure_r || exit -1
+  configure_ruby || exit -2
 }
 
 setup
