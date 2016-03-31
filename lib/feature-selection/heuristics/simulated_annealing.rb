@@ -38,8 +38,8 @@ module FeatureSelection
           end
         end
 
-        puts "#{generated_neighbors} neighbors generated, #{selections} selected. Cooling down..." if @debug
         cool_down
+        puts "#{generated_neighbors} neighbors generated, #{selections} selected. Cooling down to #{@temperature}" if @debug
       end
     end
 
