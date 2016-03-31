@@ -2,17 +2,20 @@ require_relative "local_search"
 
 module FeatureSelection
   class SimAnnealing < LocalSearch
-    def initialize dataset, debug: false, random: Random.new(RANDOM_SEED)
+    def initialize dataset, debug: false, random: Random.new(CONFIG.random_seed)
       super
 
-      worsening = prob_accept = 0.3
-      @initial_temp = worsening * @classifier.fitness_for(@solution) / -Math.log(prob_accept)
+      @initial_temp = CONFIG.simulated_annealing[:worsening] * @classifier.fitness_for(@solution) / -Math.log(CONFIG.simulated_annealing[:prob_accept])
       @final_temp = 1e-3
-      @max_generated = 10 * @dataset.input_count
-      @max_selections = 0.1 * @dataset.input_count
-      @num_cooldowns = 15000 / @max_generated
+      @max_generated = CONFIG.simulated_annealing[:max_neighbors_factor] * @dataset.input_count
+      @max_selections = CONFIG.simulated_annealing[:max_selections_factor] * @max_generated
+      @num_cooldowns = CONFIG.max_evaluations / @max_generated
       @cooled = 0
       @temperature = @initial_temp
+
+      if @debug
+        puts @initial_temp
+      end
     end
 
     private
