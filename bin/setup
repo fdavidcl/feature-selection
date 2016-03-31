@@ -16,7 +16,8 @@ ask() {
         fi
 
         # Ask the question - use /dev/tty in case stdin is redirected from somewhere else
-        read -p "$1 [$prompt] " REPLY </dev/tty
+        echo -en "\e[1m\e[33m$1\e[0m "
+        read -p "[$prompt] " REPLY </dev/tty
 
         # Default?
         if [ -z "$REPLY" ]; then
@@ -32,26 +33,26 @@ ask() {
     done
 }
 
+inform() {
+  echo -e "\e[1m\e[36m$@\e[0m"
+  sleep 1
+}
+
 install_ruby() {
   local desired_version=$1
 
   ask "Do you want to install Ruby $desired_version? (it won't affect your Ruby installation)" N && (
-    echo "Installing RVM..."
+    inform "Installing RVM..."
     sleep 1
     gpg --keyserver hkp://keys.gnupg.net --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3
     \curl -sSL https://get.rvm.io | bash -s stable --ruby=$desired_version
-    echo "Using Ruby $desired_version..."
+    inform "Using Ruby $desired_version..."
     source ~/.profile
     rvm use $desired_version
     return 0
   ) || (
     return -1
   )
-}
-
-inform() {
-  echo $@
-  sleep 1
 }
 
 configure_r() {
@@ -78,6 +79,8 @@ EOF
 
 configure_ruby() {
   inform "Searching for Ruby..."
+  local desired_version=2.3
+
   which -a ruby && (
     inform "OK! Checking Ruby version..."
     local version=$(ruby -e "puts RUBY_VERSION")
@@ -85,14 +88,14 @@ configure_ruby() {
     ruby -e "exit 1 unless RUBY_VERSION.start_with? '$desired_version'" && (
       inform "OK!"
     ) || (
-      install_ruby 2.3
+      install_ruby $desired_version
     )
     inform "Installing dependencies..."
     gem install bundler --conservative && bundle install
     return 0
   ) || (
     inform "Couldn't find a Ruby installation"
-    install_ruby 2.3 || (
+    install_ruby $desired_version || (
       inform "Please install Ruby to continue. Aborting..."
       return -2
     )
@@ -102,6 +105,8 @@ configure_ruby() {
 setup() {
   configure_r || exit -1
   configure_ruby || exit -2
+
+  inform "Everything set up! You can run bin/start to start the program"
 }
 
 setup
