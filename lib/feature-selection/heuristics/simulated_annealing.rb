@@ -20,7 +20,9 @@ module FeatureSelection
 
     private
     def outer_loop
-      until cold?
+      success = true
+
+      until cold? || !success
         generated_neighbors = 0
         selections = 0
 
@@ -40,6 +42,8 @@ module FeatureSelection
 
         cool_down
         puts "#{generated_neighbors} neighbors generated, #{selections} selected. Cooling down to #{@temperature}" if @debug
+
+        success = false if selections.zero?
       end
     end
 
