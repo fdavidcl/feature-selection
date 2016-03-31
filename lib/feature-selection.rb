@@ -1,9 +1,15 @@
 
+require "feature-selection/config"
+
 module FeatureSelection
-  RANDOM_SEED = 1
-  RNG = Random.new(RANDOM_SEED)
-  NUMBER_NEIGHBORS = 3
-  DEBUG = true
+  CONFIG = if File.exists?(Config::DEFAULT_FILENAME)
+      Config.new
+    else
+      puts "Generating new configuration file in #{Config::DEFAULT_FILENAME}"
+      Config.generate
+    end
+
+  RNG = Random.new(CONFIG.random_seed)
 end
 
 require "feature-selection/version"
