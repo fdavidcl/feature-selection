@@ -20,7 +20,7 @@ module FeatureSelection
 
     def solution= new_solution
       @solution, @fitness = new_solution
-      puts "New solution: #{@solution} with fitness #{@fitness}" if @debug
+      #puts "New solution: #{@solution} with fitness #{@fitness}" if @debug
     end
 
     private
