@@ -87,7 +87,7 @@ module FeatureSelection
     end
 
     # Stratified partitioning
-    def partition num_partitions, random: Random.new(RANDOM_SEED)
+    def partition num_partitions, random: Random.new(CONFIG.random_seed)
       # Save names for later
       names = @dataframe.data.keys
       # Group instances by class

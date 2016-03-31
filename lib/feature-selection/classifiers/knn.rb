@@ -25,7 +25,7 @@ module FeatureSelection
 
       },
       {
-        random_seed: RANDOM_SEED,
+        random_seed: CONFIG.random_seed,
         dataset: dataset.dataframe,
         class_col_num: dataset.class_col + 1,
         k: k

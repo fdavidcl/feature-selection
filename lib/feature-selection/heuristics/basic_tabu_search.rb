@@ -2,13 +2,13 @@ require_relative "local_search"
 
 module FeatureSelection
   class BasicTabuSearch < LocalSearch
-    def initialize dataset, debug: false, random: Random.new(RANDOM_SEED)
+    def initialize dataset, debug: false, random: Random.new(CONFIG.random_seed)
       super
 
       @tabu_list = []
       @max_tabu_length = @solution.length/3
-      @max_generated = 30
-      @num_iterations = 500
+      @max_generated = CONFIG.tabu_search[:num_neighbors]
+      @num_iterations = CONFIG.max_evaluations / @max_generated
     end
 
     private

@@ -3,7 +3,7 @@ require_relative "heuristic"
 
 module FeatureSelection
   class SequentialSelection < Heuristic
-    def initialize dataset, forward, debug: false, random: Random.new(RANDOM_SEED)
+    def initialize dataset, forward, debug: false, random: Random.new(CONFIG.random_seed)
       super(dataset, debug: debug, random: random)
 
       @solution = []
@@ -53,13 +53,13 @@ module FeatureSelection
   end
 
   class SeqForwardSelection < SequentialSelection
-    def initialize dataset, debug: false, random: Random.new(RANDOM_SEED)
+    def initialize dataset, debug: false, random: Random.new(CONFIG.random_seed)
       super(dataset, true, debug: debug, random: random)
     end
   end
 
   class SeqBackwardSelection < SequentialSelection
-    def initialize dataset, debug: false, random: Random.new(RANDOM_SEED)
+    def initialize dataset, debug: false, random: Random.new(CONFIG.random_seed)
       super(dataset, false, debug: debug, random: random)
     end
   end
