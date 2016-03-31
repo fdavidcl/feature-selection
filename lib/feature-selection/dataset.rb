@@ -4,11 +4,9 @@ module FeatureSelection
   class Dataset
     # Class method: Reads an ARFF file and returns a Dataset out of it
     def self.read_arff filename, class_col = nil
-      r = Rserve::Simpler.new
+      r = Rserve::Simpler.new cmd_init: CONFIG.rserve_cmd
       begin
         data = r >> %Q{
-          if (!("foreign" %in% installed.packages()[, "Package"]))
-            install.packages("foreign")
           library(foreign)
           read.arff("#{File.absolute_path(__dir__)}/#{filename}")
         }
@@ -24,7 +22,7 @@ module FeatureSelection
     end
 
     def self.data name, class_col = nil
-      r = Rserve::Simpler.new
+      r = Rserve::Simpler.new cmd_init: CONFIG.rserve_cmd
       begin
         data = r >> %Q{
           data(#{name})

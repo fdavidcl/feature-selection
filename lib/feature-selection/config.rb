@@ -11,6 +11,7 @@ module FeatureSelection
         {
           random_seed: 1,
           debug: false,
+          rserve_cmd: "R CMD r_libs/Rserve/R/Rserve",
           knn: {
             num_neighbors: 3
           },

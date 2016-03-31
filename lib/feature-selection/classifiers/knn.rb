@@ -5,10 +5,8 @@ require "feature-selection/heuristics/heuristic"
 module FeatureSelection
   class KNearest < Classifier
     def initialize k, dataset
-      @r = Rserve::Simpler.new
+      @r = Rserve::Simpler.new cmd_init: CONFIG.rserve_cmd
       @r.command %Q{
-        if (!("class" %in% installed.packages()[, "Package"]))
-          install.packages("class")
         library(class)
         library(compiler)
 

@@ -70,6 +70,7 @@ configure_r() {
       library(Rserve)
       Rserve(args = '--no-save')
 EOF
+    chmod u+x r_libs/Rserve/R/Rserve
     return 0
   ) || (
     inform "Couldn't find an R installation. Please install R to continue. Aborting..."
