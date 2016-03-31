@@ -1,12 +1,92 @@
 #!/usr/bin/env bash
-set -euo pipefail
-IFS=$'\n\t'
-set -vx
 
-mkdir -p r_libs
-R_LIBS="`pwd`/r_libs" R -e "install.packages('Rserve', repos='http://cran.r-project.org'); library(Rserve); Rserve()"
+ask() {
+    # http://djm.me/ask
+    while true; do
 
-gem install bundler
-bundle install
+        if [ "${2:-}" = "Y" ]; then
+            prompt="Y/n"
+            default=Y
+        elif [ "${2:-}" = "N" ]; then
+            prompt="y/N"
+            default=N
+        else
+            prompt="y/n"
+            default=
+        fi
 
-# Do any other automated setup that you need to do here
+        # Ask the question - use /dev/tty in case stdin is redirected from somewhere else
+        read -p "$1 [$prompt] " REPLY </dev/tty
+
+        # Default?
+        if [ -z "$REPLY" ]; then
+            REPLY=$default
+        fi
+
+        # Check if the reply is valid
+        case "$REPLY" in
+            Y*|y*) return 0 ;;
+            N*|n*) return 1 ;;
+        esac
+
+    done
+}
+
+install_ruby() {
+  local desired_version=$1
+
+  ask "Do you want to install Ruby $desired_version? (it won't affect your Ruby installation)" N && (
+    echo "Installing RVM..."
+    sleep 1
+    gpg --keyserver hkp://keys.gnupg.net --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3
+    \curl -sSL https://get.rvm.io | bash -s stable --ruby=$desired_version
+    echo "Using Ruby $desired_version..."
+    source ~/.profile
+    rvm use $desired_version
+  )
+}
+
+inform() {
+  echo $@
+  sleep 1
+}
+
+setup() {
+  inform "Searching for Ruby..."
+  which -a ruby && (
+    inform "OK! Checking Ruby version..."
+    local version=$(ruby -e "puts RUBY_VERSION")
+    inform "Current Ruby version is \"$version\"."
+    ruby -e "exit 1 unless RUBY_VERSION.start_with? '$desired_version'" && (
+      inform "OK!"
+    ) || (
+      install_ruby 2.3
+    )
+    inform "Installing dependencies..."
+    gem install bundler --conservative && bundle install
+  ) || (
+    inform "\nCouldn't find a Ruby installation"
+    install_ruby 2.3
+  )
+
+  inform "Searching for R..."
+  which -a R && (
+    inform "OK! R found, installing dependencies..."
+
+    mkdir -p r_libs
+    R_LIBS="`pwd`/r_libs" R --no-save << EOF
+      deps <- c('Rserve', 'class', 'foreign')
+      for (dep in deps) {
+        if (!(dep %in% installed.packages()[, "Package"]))
+          install.packages(dep, repos='http://cran.r-project.org')
+      }
+      library(Rserve)
+      Rserve(args = '--no-save')
+EOF
+  ) || (
+    inform "\nCouldn't find an R installation. Please install R to continue. Aborting..."
+    exit -1
+  )
+}
+
+setup
