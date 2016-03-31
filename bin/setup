@@ -65,7 +65,7 @@ setup() {
     inform "Installing dependencies..."
     gem install bundler --conservative && bundle install
   ) || (
-    inform "\nCouldn't find a Ruby installation"
+    inform "Couldn't find a Ruby installation"
     install_ruby 2.3
   )
 
