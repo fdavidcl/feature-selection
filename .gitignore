@@ -18,7 +18,7 @@ build/
 ## Documentation cache and generated files:
 /.yardoc/
 /_yardoc/
-/doc/
+/doc/*.pdf
 /rdoc/
 
 ## Environment normalization:
@@ -40,9 +40,10 @@ build/
 /Gemfile.lock
 /_yardoc/
 /coverage/
-/doc/
+/doc/*.pdf
 /pkg/
 /spec/reports/
 /tmp/
 
-*.arff
+r_libs/
+log/
