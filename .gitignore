@@ -47,3 +47,8 @@ build/
 
 r_libs/
 log/
+
+# compiled stuff
+*.o
+*.so
+*.fuse*
