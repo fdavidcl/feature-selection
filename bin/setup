@@ -104,7 +104,7 @@ configure_ruby() {
 }
 
 setup() {
-  configure_r || exit -1
+  #configure_r || exit -1
   configure_ruby || exit -2
 
   inform "Everything set up! You can run bin/start to start the program"
