@@ -44,7 +44,7 @@ module FeatureSelection
 
           yielder << [
             attempt,
-            @classifier.fitness_for(attempt),
+            fitness_for(attempt),
             f
           ]
           @evaluations += 1

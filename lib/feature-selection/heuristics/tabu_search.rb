@@ -55,7 +55,7 @@ module FeatureSelection
           @best_solution
         end
 
-      self.solution = new_s, @classifier.fitness_for(new_s)
+      self.solution = new_s, fitness_for(new_s)
     end
 
     def diverse_solution

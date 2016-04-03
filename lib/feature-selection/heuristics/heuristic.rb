@@ -21,7 +21,7 @@ module FeatureSelection
       @debug = debug
       @rng = random
       @dataset = dataset
-      @classifier = KNearest.new CONFIG.knn[:num_neighbors], @dataset
+      @classifier = CKNearest.new CONFIG.knn[:num_neighbors], @dataset
       @evaluations = 0
     end
 

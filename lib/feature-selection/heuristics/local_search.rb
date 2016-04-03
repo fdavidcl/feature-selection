@@ -11,7 +11,7 @@ module FeatureSelection
 
     def run
       # initialize with current solution
-      @best_fitness = @fitness = @classifier.fitness_for(@solution)
+      @best_fitness = @fitness = fitness_for(@solution)
       outer_loop
 
       [@best_solution, @best_fitness]
