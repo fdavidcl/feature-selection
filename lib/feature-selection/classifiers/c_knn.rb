@@ -16,6 +16,7 @@ module FeatureSelection
         @dataset.classes,
         @dataset.class_count,
         features.to_a,
+        @dataset.numeric_attrs,
         @rng
       )
     end

@@ -38,7 +38,7 @@ VALUE CKNearest = Qnil;
 
 void Init_c_knn(void);
 
-VALUE method_knnclassifier_knn_leaveoneout(VALUE self, VALUE rb_k, VALUE rb_train, VALUE rb_class, VALUE rb_class_count, VALUE rb_features, VALUE rb_random);
+VALUE method_knnclassifier_knn_leaveoneout(VALUE self, VALUE rb_k, VALUE rb_train, VALUE rb_class, VALUE rb_class_count, VALUE rb_features, VALUE rb_which_numeric, VALUE rb_random);
 
 /*
 KNearest::KNNClassifier#leaveoneout
@@ -64,7 +64,7 @@ params:
   rb_features: bit array of selected features
   rb_random: Random object
 */
-VALUE method_c_knn_leaveoneout(VALUE self, VALUE rb_k, VALUE rb_train, VALUE rb_class, VALUE rb_class_count, VALUE rb_features, VALUE rb_random) {
+VALUE method_c_knn_leaveoneout(VALUE self, VALUE rb_k, VALUE rb_train, VALUE rb_class, VALUE rb_class_count, VALUE rb_features, VALUE rb_which_numeric, VALUE rb_random) {
   int instance_count = RARRAY_LEN(rb_train),
     class_count = NUM2INT(rb_class_count),
     input_count = RARRAY_LEN(rb_ary_entry(rb_train, 0)),
@@ -110,8 +110,14 @@ VALUE method_c_knn_leaveoneout(VALUE self, VALUE rb_k, VALUE rb_train, VALUE rb_
       for (k = 0; k < input_count; k++) {
         // Skip unselected features
         if (NUM2INT(rb_ary_entry(rb_features, k))) {
-          tmp = NUM2DBL(rb_ary_entry(rb_ary_entry(rb_train, npat), k)) - NUM2DBL(rb_ary_entry(rb_ary_entry(rb_train, j), k));
-          dist += tmp * tmp;
+          // Distinguish numeric attributes from nominal
+          if (NUM2INT(rb_ary_entry(rb_which_numeric, k))) {
+            tmp = NUM2DBL(rb_ary_entry(rb_ary_entry(rb_train, npat), k)) - NUM2DBL(rb_ary_entry(rb_ary_entry(rb_train, j), k));
+            dist += tmp * tmp;
+          } else if (NUM2INT(rb_ary_entry(rb_ary_entry(rb_train, npat), k)) != NUM2INT(rb_ary_entry(rb_ary_entry(rb_train, j), k))) {
+            // Add 1 if values are different 
+            dist += 1;
+          }
         }
       }
 
@@ -231,5 +237,5 @@ void Init_c_knn(void) {
   FeatureSelection = rb_const_get(rb_cObject, rb_intern("FeatureSelection"));
   Classifier = rb_const_get(FeatureSelection, rb_intern("Classifier"));
   CKNearest = rb_const_get(FeatureSelection, rb_intern("CKNearest"));
-  rb_define_method(CKNearest, "leaveoneout", method_c_knn_leaveoneout, 6);
+  rb_define_method(CKNearest, "leaveoneout", method_c_knn_leaveoneout, 7);
 }

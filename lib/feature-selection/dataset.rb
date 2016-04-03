@@ -9,7 +9,7 @@ module FeatureSelection
       self.new arfffile, class_col, File.basename(filename, ".*")
     end
 
-    attr_reader :class_col, :name, :classes, :instances, :class_count
+    attr_reader :class_col, :name, :classes, :instances, :class_count, :numeric_attrs
 
     def initialize arfffile = ARFF::ARFFFile.new, class_col = nil, name = ""
       @arfffile = arfffile
@@ -17,6 +17,7 @@ module FeatureSelection
       @class_col = class_col || @arfffile.data[0].length - 1
       @instances = calculate_inputs
       @classes = calculate_classes
+      @numeric_attrs = which_numeric
       @class_count = @classes.uniq.length
       #@class_name = @dataframe.data.keys[@class_col]
       @name = name.empty? ? @arfffile.relation : name
@@ -62,10 +63,10 @@ module FeatureSelection
     end
 
     def normalize!
-      columns = instances.transpose
+      columns = instances.clone.transpose
 
       types = @arfffile.attribute_types
-      names = @arfffile.attribute_names
+      names = @arfffile.attribute_names.clone
       names.slice! class_col, 1
 
       names.zip(0 ... input_count).each do |name, index|
@@ -107,10 +108,24 @@ module FeatureSelection
     end
 
     def calculate_inputs
-      columns = @arfffile.data.transpose
+      columns = @arfffile.data.clone.transpose
       # Remove class column
       columns.slice! class_col, 1
       columns.transpose
+    end
+
+    def which_numeric
+      types = @arfffile.attribute_types
+      names = @arfffile.attribute_names.clone
+      names.slice! class_col, 1
+
+      names.map do |at|
+        if types[at] == :numeric
+          1
+        else
+          0
+        end
+      end
     end
   end
 end
