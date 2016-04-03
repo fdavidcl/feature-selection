@@ -13,17 +13,32 @@ module FeatureSelection
       puts "Evaluator object using seeds #{@seeds.join ", "}."
     end
 
-    def evaluate heuristic_class, dataset, csv: false
+    def evaluate heuristic_class, dataset, csv: false, parallel: true
       partitions = (0 ... repeats).map{ dataset.partition @folds, random: FeatureSelection::RNG }
       results = partitions.zip(partitions.map(&:reverse)).flatten(1).map.each_with_index do |(train, test), index|
-        heuristic = heuristic_class.new(train, debug: CONFIG.debug, random: Random.new(@seeds[index]))
-        start = Time.now
-        solution, fitness = heuristic.run
-        finish = Time.now
-        evaluation = heuristic.classifier.class.new(CONFIG.knn[:num_neighbors], test).fitness_for(solution)
-        reduction = solution.count(0).to_f/solution.length
+        one_eval = Proc.new do
+          heuristic = heuristic_class.new(train, debug: CONFIG.debug, random: Random.new(@seeds[index]))
+          start = Time.now
+          solution, fitness = heuristic.run
+          finish = Time.now
+          evaluation = heuristic.classifier.class.new(CONFIG.knn[:num_neighbors], test).fitness_for(solution)
+          reduction = solution.count(0).to_f/solution.length
 
-        [solution, fitness, evaluation, reduction, finish - start]
+          [solution, fitness, evaluation, reduction, finish - start]
+        end
+
+        if parallel
+          Thread.new &one_eval
+        else
+          one_eval.call
+        end
+      end
+
+      if parallel
+        results.map! do |thread|
+          thread.join
+          thread[:output]
+        end
       end
 
       names = [:solution, :training, :test, :reduction, :time]

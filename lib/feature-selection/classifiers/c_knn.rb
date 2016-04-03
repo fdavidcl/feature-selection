@@ -10,11 +10,11 @@ module FeatureSelection
     end
 
     def fitness_for features
-      puts @dataset.instances.to_s
       leaveoneout(
         @k,
         @dataset.instances,
         @dataset.classes,
+        @dataset.class_count,
         features.to_a,
         @rng
       )

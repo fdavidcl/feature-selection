@@ -9,24 +9,22 @@ module FeatureSelection
       self.new arfffile, class_col, File.basename(filename, ".*")
     end
 
-    attr_reader :class_col, :name, :classes
+    attr_reader :class_col, :name, :classes, :instances, :class_count
 
     def initialize arfffile = ARFF::ARFFFile.new, class_col = nil, name = ""
       @arfffile = arfffile
       # Assume class is last column by default
-      @class_col = class_col || input_count
+      @class_col = class_col || @arfffile.data[0].length - 1
+      @instances = calculate_inputs
       @classes = calculate_classes
+      @class_count = @classes.uniq.length
       #@class_name = @dataframe.data.keys[@class_col]
       @name = name.empty? ? @arfffile.relation : name
     end
 
-    def instances
-      @arfffile.data
-    end
-
     def input_count
       # Count all input features
-      instances[0].length - 1
+      instances[0].length
     end
 
     def inputs
@@ -41,11 +39,10 @@ module FeatureSelection
     # Stratified partitioning
     def partition num_partitions, random: Random.new(CONFIG.random_seed)
       # Group instances by class
-      strata = instances.group_by{ |i| i[class_col] }
+      strata = @arfffile.data.group_by{ |i| i[class_col] }
 
       strata.each_value.map do |str|
         # Randomly distribute instances from each stratum onto partitions
-        #puts str.shuffle(random: random).each_slice((str.length - 1)/num_partitions + 1).to_a
         str.shuffle(random: random).each_slice((str.length - 1)/num_partitions + 1).to_a
       end
         .transpose
@@ -67,9 +64,23 @@ module FeatureSelection
     def normalize!
       columns = instances.transpose
 
-      columns.map do |column|
-        
+      types = @arfffile.attribute_types
+      names = @arfffile.attribute_names
+      names.slice! class_col, 1
+
+      names.zip(0 ... input_count).each do |name, index|
+        if types[name] == :numeric
+          max = columns[index].max
+          min = columns[index].min
+          columns[index].map!{ |e| (e - min)/(max - min) }
+        else # Nominal or string
+          corresponding = columns[index].uniq.each_with_index.to_h
+          columns[index].map!{ |e| corresponding[e] }
+        end
       end
+
+      @instances = columns.transpose
+      self
     end
 
     def to_s
@@ -87,12 +98,19 @@ module FeatureSelection
     private
 
     def calculate_classes
-      cl = instances.map{ |instance| instance[class_col] }
+      cl = @arfffile.data.map{ |instance| instance[class_col] }
 
       # Select all unique classes and assign them a number
       corresponding = cl.uniq.each_with_index.to_h
       # Return the array of corresponding numbers
       cl.map { |c| corresponding[c] }
+    end
+
+    def calculate_inputs
+      columns = @arfffile.data.transpose
+      # Remove class column
+      columns.slice! class_col, 1
+      columns.transpose
     end
   end
 end

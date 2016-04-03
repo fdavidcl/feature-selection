@@ -19,6 +19,8 @@
 #include <ruby.h>
 #include <math.h>
 #include <float.h>
+// remove later:
+#include <stdio.h>
 
 #define EPS 1e-4		/* relative test of equality of distances */
 
@@ -36,7 +38,7 @@ VALUE CKNearest = Qnil;
 
 void Init_c_knn(void);
 
-VALUE method_knnclassifier_knn_leaveoneout(VALUE self, VALUE rb_k, VALUE rb_train, VALUE rb_class, VALUE rb_features, VALUE rb_random);
+VALUE method_knnclassifier_knn_leaveoneout(VALUE self, VALUE rb_k, VALUE rb_train, VALUE rb_class, VALUE rb_class_count, VALUE rb_features, VALUE rb_random);
 
 /*
 KNearest::KNNClassifier#leaveoneout
@@ -62,17 +64,17 @@ params:
   rb_features: bit array of selected features
   rb_random: Random object
 */
-VALUE method_c_knn_leaveoneout(VALUE self, VALUE rb_k, VALUE rb_train, VALUE rb_class, VALUE rb_features, VALUE rb_random) {
-  int class_count = RARRAY_LEN(rb_class),
+VALUE method_c_knn_leaveoneout(VALUE self, VALUE rb_k, VALUE rb_train, VALUE rb_class, VALUE rb_class_count, VALUE rb_features, VALUE rb_random) {
+  int instance_count = RARRAY_LEN(rb_train),
+    class_count = NUM2INT(rb_class_count),
     input_count = RARRAY_LEN(rb_ary_entry(rb_train, 0)),
-    instance_count = RARRAY_LEN(rb_train),
-    use_all = 1, cross_validation = 1,
-    correct_guesses;
+    use_all = 1, cross_validation = 1;
 
+  int correct_guesses;
   double fitness;
 
 
-  /* This is code based on the "class" package from R */
+  /* The following is code based on the "class" package from R */
   /***************************************************************
    VR_knn input parameters:
      Sint *kin, Sint *lin, Sint *pntr, Sint *pnte, Sint *p,
@@ -82,12 +84,11 @@ VALUE method_c_knn_leaveoneout(VALUE self, VALUE rb_k, VALUE rb_train, VALUE rb_
   int   i, index, j, k, k1, kinit = NUM2INT(rb_k), kn, l = 0, mm, npat, ntie, extras;
   int   pos[MAX_TIES], nclass[MAX_TIES];
   int   j1, j2, needed, t;
-  int votes[input_count];
   double dist, tmp, nndist[MAX_TIES];
 
   // Prediction results
-  int res[instance_count];
-  double pr[instance_count];
+  int * res = (int*) malloc(sizeof(int) * instance_count);
+  int * votes = (int*) malloc(sizeof(int) * class_count);
 
   /*
   Use a 'fence' in the (k+1)st position to avoid special cases.
@@ -98,7 +99,7 @@ VALUE method_c_knn_leaveoneout(VALUE self, VALUE rb_k, VALUE rb_train, VALUE rb_
     kn = kinit;
 
     for (k = 0; k < kn; k++)
-      nndist[k] = 0.99 * (1 - NUM2DBL(rb_intern("Float::EPSILON")));
+      nndist[k] = 0.99 * NUM2DBL(rb_intern("Float::MAX"));
 
     for (j = 0; j < instance_count; j++) {
       if (cross_validation && (j == npat))
@@ -108,15 +109,12 @@ VALUE method_c_knn_leaveoneout(VALUE self, VALUE rb_k, VALUE rb_train, VALUE rb_
 
       for (k = 0; k < input_count; k++) {
         // Skip unselected features
-        if (!NUM2INT(rb_ary_entry(rb_features, k)))
-          continue;
-        /// PARECE QUE EN EL DATA.FRAME AVANZAMOS POR COLUMNAS (POR ESO SALTAMOS NTE DATOS)
-        //    tmp = NUM2DBL(rb_ary_entry(rb_ary_entry(rb_train, k), npat)) - NUM2DBL(rb_ary_entry(rb_ary_entry(rb_train, k), j));
-        /// SI FUÉSEMOS POR FILAS, DEBERÍA SER ASÍ
-        tmp = NUM2DBL(rb_ary_entry(rb_ary_entry(rb_train, npat), k)) - NUM2DBL(rb_ary_entry(rb_ary_entry(rb_train, j), k));
-
-        dist += tmp * tmp;
+        if (NUM2INT(rb_ary_entry(rb_features, k))) {
+          tmp = NUM2DBL(rb_ary_entry(rb_ary_entry(rb_train, npat), k)) - NUM2DBL(rb_ary_entry(rb_ary_entry(rb_train, j), k));
+          dist += tmp * tmp;
+        }
       }
+
       /* Use 'fuzz' since distance computed could depend on order of coordinates */
       if (dist <= nndist[kinit - 1] * (1 + EPS))
         for (k = 0; k <= kn; k++)
@@ -134,16 +132,16 @@ VALUE method_c_knn_leaveoneout(VALUE self, VALUE rb_k, VALUE rb_train, VALUE rb_
             break;
           }
 
-      nndist[kn] = 0.99 * (1 - NUM2DBL(rb_intern("Float::EPSILON")));
+      nndist[kn] = 0.99 * NUM2DBL(rb_intern("Float::MAX"));
     }
 
-    for (j = 0; j <= class_count; j++)
+    for (j = 0; j < class_count; j++)
       votes[j] = 0;
 
     if (use_all) {
-      for (j = 0; j < kinit; j++)
+      for (j = 0; j < kinit; j++){
         votes[NUM2INT(rb_ary_entry(rb_class, pos[j]))]++;
-
+      }
       extras = 0;
 
       for (j = kinit; j < kn; j++) {
@@ -154,67 +152,66 @@ VALUE method_c_knn_leaveoneout(VALUE self, VALUE rb_k, VALUE rb_train, VALUE rb_
         votes[NUM2INT(rb_ary_entry(rb_class, pos[j]))]++;
       }
     } else { /* break ties at random */
-      extras = 0;
-
-      for (j = 0; j < kinit; j++) {
-        if (nndist[j] >= nndist[kinit - 1] * (1 - EPS))
-        break;
-        votes[NUM2INT(rb_ary_entry(rb_class, pos[j]))]++;
-      }
-
-      j1 = j;
-
-      if (j1 == kinit - 1) { /* no ties for largest */
-        votes[NUM2INT(rb_ary_entry(rb_class, pos[j1]))]++;
-      } else {
-        /* Use reservoir sampling to choose amongst the tied distances */
-        j1 = j;
-        needed = kinit - j1;
-
-        for (j = 0; j < needed; j++)
-          nclass[j] = NUM2INT(rb_ary_entry(rb_class, pos[j1 + j]));
-
-        t = needed;
-
-        for (j = j1 + needed; j < kn; j++) {
-          if (nndist[j] > nndist[kinit - 1] * (1 + EPS))
-            break;
-
-          if (++t * NUM2DBL(rb_funcall(rb_random, rb_intern("rand"), 0)) < needed) {
-            j2 = j1 + (int) NUM2DBL((rb_funcall(rb_random, rb_intern("rand"), 0)) * needed);
-            nclass[j2] = NUM2INT(rb_ary_entry(rb_class, pos[j]));
-          }
-        }
-
-        for (j = 0; j < needed; j++)
-          votes[nclass[j]]++;
-      }
+      // extras = 0;
+      //
+      // for (j = 0; j < kinit; j++) {
+      //   if (nndist[j] >= nndist[kinit - 1] * (1 - EPS))
+      //     break;
+      //
+      //   votes[NUM2INT(rb_ary_entry(rb_class, pos[j]))]++;
+      // }
+      //
+      // j1 = j;
+      //
+      // if (j1 == kinit - 1) { /* no ties for largest */
+      //   votes[NUM2INT(rb_ary_entry(rb_class, pos[j1]))]++;
+      // } else {
+      //   /* Use reservoir sampling to choose amongst the tied distances */
+      //   j1 = j;
+      //   needed = kinit - j1;
+      //
+      //   for (j = 0; j < needed; j++)
+      //     nclass[j] = NUM2INT(rb_ary_entry(rb_class, pos[j1 + j]));
+      //
+      //   t = needed;
+      //
+      //   for (j = j1 + needed; j < kn; j++) {
+      //     if (nndist[j] > nndist[kinit - 1] * (1 + EPS))
+      //       break;
+      //
+      //     if (++t * NUM2DBL(rb_funcall(rb_random, rb_intern("rand"), 0)) < needed) {
+      //       j2 = j1 + (int) NUM2DBL((rb_funcall(rb_random, rb_intern("rand"), 0)) * needed);
+      //       nclass[j2] = NUM2INT(rb_ary_entry(rb_class, pos[j]));
+      //     }
+      //   }
+      //
+      //   for (j = 0; j < needed; j++)
+      //     votes[nclass[j]]++;
+      // }
     }
 
     /* Use reservoir sampling to choose amongst the tied votes */
     ntie = 1;
 
-    if (l > 0)
-      mm = l - 1 + extras;
-    else
-      mm = 0;
-
+    mm = votes[0];
     index = 0;
 
-    for (i = 1; i <= class_count; i++)
+    for (i = 1; i < class_count; i++)
       if (votes[i] > mm) {
         ntie = 1;
         index = i;
         mm = votes[i];
       } else if (votes[i] == mm && votes[i] >= l) {
         if (++ntie * NUM2DBL(rb_funcall(rb_random, rb_intern("rand"), 0)) < 1.0)
-        index = i;
+          index = i;
       }
 
     res[npat] = index;
-    pr[npat] = (double) mm / (kinit + extras);
+    //pr[npat] = (double) mm / (kinit + extras);
   }
   /* end of "class" code */
+
+  free(votes);
 
   correct_guesses = 0;
 
@@ -223,14 +220,16 @@ VALUE method_c_knn_leaveoneout(VALUE self, VALUE rb_k, VALUE rb_train, VALUE rb_
     correct_guesses += res[npat] == NUM2INT(rb_ary_entry(rb_class, npat));
   }
 
-  fitness = correct_guesses / (double)(instance_count);
+  free(res);
 
-  return rb_float_new(fitness); //?
+  fitness = (double)(correct_guesses) / (double)(instance_count);
+
+  return rb_float_new(fitness);
 }
 
 void Init_c_knn(void) {
   FeatureSelection = rb_const_get(rb_cObject, rb_intern("FeatureSelection"));
   Classifier = rb_const_get(FeatureSelection, rb_intern("Classifier"));
   CKNearest = rb_const_get(FeatureSelection, rb_intern("CKNearest"));
-  rb_define_method(CKNearest, "leaveoneout", method_c_knn_leaveoneout, 5);
+  rb_define_method(CKNearest, "leaveoneout", method_c_knn_leaveoneout, 6);
 }
