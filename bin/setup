@@ -64,7 +64,7 @@ configure_r() {
     R_LIBS="`pwd`/r_libs" R --no-save << EOF
       deps <- c('Rserve', 'class', 'foreign')
       for (dep in deps) {
-        if (!(dep %in% installed.packages()[, "Package"]))
+        #if (!(dep %in% installed.packages()[, "Package"]))
           install.packages(dep, repos='http://cran.r-project.org')
       }
       library(Rserve)
