@@ -25,11 +25,13 @@ Gem::Specification.new do |spec|
   spec.bindir        = "exe"
   spec.executables   = spec.files.grep(%r{^exe/}) { |f| File.basename(f) }
   spec.require_paths = ["lib"]
+  spec.extensions   << "ext/c_knn/extconf.rb"
 
   spec.add_development_dependency "bundler", "~> 1.11"
   spec.add_development_dependency "rake", "~> 10.0"
   spec.add_development_dependency "minitest", "~> 5.0"
   spec.add_development_dependency "ruby-prof"
+  spec.add_development_dependency "rake-compiler"
 
   spec.add_dependency "rserve-simpler", "~> 0.0.6"
   spec.add_dependency "ingramj-bitarray"
