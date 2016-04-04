@@ -61,7 +61,6 @@ int * class_col = NULL;
 int * which_numeric = NULL;
 int ncol, nrow, class_count, num_neighbors;
 double FLOAT_MAX;
-VALUE rb_random;
 
 VALUE method_c_knn_leaveoneout(VALUE self, VALUE rb_features) {
   rb_features = rb_funcall(rb_features, rb_intern("to_a"), 0);
@@ -167,7 +166,8 @@ VALUE method_c_knn_leaveoneout(VALUE self, VALUE rb_features) {
         mm = votes[i];
       } else if (votes[i] == mm && votes[i] >= l) {
         // This line is causing segfaults:
-        if (++ntie * NUM2DBL(rb_funcall(rb_random, rb_intern("rand"), 0)) < 1.0)
+        //if (++ntie * NUM2DBL(rb_funcall(rb_random, rb_intern("rand"), 0)) < 1.0)
+        if (++ntie * NUM2DBL(rb_funcall(rb_iv_get(self, "@rng"), rb_intern("rand"), 0)) < 1.0)
           index = i;
       }
 
@@ -203,7 +203,12 @@ VALUE method_c_knn_initialize(VALUE self, VALUE rb_k, VALUE rb_dataset, VALUE rb
   ncol = RARRAY_LEN(rb_ary_entry(data, 0));
   class_count = rb_funcall(rb_dataset, rb_intern("class_count"), 0);
   FLOAT_MAX = NUM2DBL(rb_intern("Float::MAX"));
-  rb_random = rb_random_par;
+  //rb_random = rb_random_par;
+  rb_iv_set(self, "@rng", rb_random_par);
+
+  if (rb_random_par == Qnil) {
+    printf("WTF\n");
+  }
 
   instances = (double*) malloc(sizeof(double) * nrow * ncol);
 

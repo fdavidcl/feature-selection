@@ -47,7 +47,6 @@ module FeatureSelection
             fitness_for(attempt),
             f
           ]
-          #@evaluations += 1
         end
       end
     end

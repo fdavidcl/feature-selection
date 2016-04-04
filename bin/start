@@ -4,7 +4,7 @@ require "feature-selection"
 
 datasets = [
   FeatureSelection::Dataset.read_arff("data/wdbc.arff", 0).normalize!,
-  FeatureSelection::Dataset.read_arff("data/movement_libras.arff").normalize!,
+  #FeatureSelection::Dataset.read_arff("data/movement_libras.arff").normalize!,
   #FeatureSelection::Dataset.read_arff("data/arrhythmia.arff").normalize!
 ]
 
@@ -14,8 +14,8 @@ heuristics = {
   # "Sequential Backward Selection" => FeatureSelection::SeqBackwardSelection,
   # "First-descent Local Search" => FeatureSelection::FirstDescent,
   # "Maximum-descent Local Search" => FeatureSelection::MaximumDescent,
-  "Simulated Annealing" => FeatureSelection::SimAnnealing,
-  #"Basic Tabu Search" => FeatureSelection::BasicTabuSearch,
+  #"Simulated Annealing" => FeatureSelection::SimAnnealing,
+  "Basic Tabu Search" => FeatureSelection::BasicTabuSearch,
   #"Complete Tabu Search" => FeatureSelection::TabuSearch
 }
 
@@ -25,7 +25,7 @@ datasets.each do |dataset|
   ev = FeatureSelection::Evaluator.new folds: 2, repeats: 5
 
   heuristics.each do |name, heuristic|
-    fork do
+    #fork do
       puts "", "-" * 80, "|#{name.center(78)}|", "-" * 80
       evaluation = ev.evaluate heuristic, dataset, csv: true
 
@@ -39,7 +39,7 @@ datasets.each do |dataset|
       puts "Fitness in test (mean): #{results[:test].reduce(&:+)/results[:test].length}"
       puts "Reduction ratio: #{results[:reduction].reduce(&:+)/results[:reduction].length}"
       puts "Time spent: total #{results[:time].reduce(&:+)}, mean #{results[:time].reduce(&:+)/results[:time].length}"
-    end
+    #end
   end
 end
 
