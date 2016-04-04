@@ -40,14 +40,14 @@ module FeatureSelection
         (0 ... @solution.length).to_a.shuffle!(random: @rng).each do |f|
           attempt = @solution.clone.toggle_bit(f)
           # Stop when maximum evaluations are done
-          break if @evaluations >= CONFIG.max_evaluations
+          #break if @evaluations >= CONFIG.max_evaluations
 
           yielder << [
             attempt,
             fitness_for(attempt),
             f
           ]
-          @evaluations += 1
+          #@evaluations += 1
         end
       end
     end

@@ -166,6 +166,7 @@ VALUE method_c_knn_leaveoneout(VALUE self, VALUE rb_features) {
         index = i;
         mm = votes[i];
       } else if (votes[i] == mm && votes[i] >= l) {
+        // This line is causing segfaults:
         if (++ntie * NUM2DBL(rb_funcall(rb_random, rb_intern("rand"), 0)) < 1.0)
           index = i;
       }
