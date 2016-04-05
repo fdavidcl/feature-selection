@@ -159,10 +159,6 @@ VALUE method_c_knn_leaveoneout(VALUE self, VALUE rb_features) {
 
     // use_all is true always so unneeded code has been removed
     for (j = 0; j < kinit; j++){
-      if (classes[pos[j]] > 4){
-        printf("j %d - ", j);
-        printf("pos %d - ", pos[j]);
-        printf("class %d\n", classes[pos[j]]);}
       votes[classes[pos[j]]]++;
     }
     extras = 0;

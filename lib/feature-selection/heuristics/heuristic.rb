@@ -22,7 +22,6 @@ module FeatureSelection
       @rng = random
       @dataset = dataset
       @dataset.instances.each{|ins| ins.each{ |dat| puts "WARNING" if dat == Float::NAN}}
-      #puts @dataset.instances.to_s
       @classifier = CKNearest.new CONFIG.knn[:num_neighbors], @dataset, Random.new(@rng.seed)
       @evaluations = 0
     end

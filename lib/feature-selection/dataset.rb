@@ -5,7 +5,6 @@ module FeatureSelection
     # Class method: Reads an ARFF file and returns a Dataset out of it
     def self.read_arff filename, class_col = nil
       arfffile = ARFF::ARFFFile.load(filename)
-      puts "#{arfffile.data.length}x#{arfffile.data[0].length}"
 
       # Assume last column is class by defualt
       class_col = arfffile.data[0].length - 1 if class_col.nil?
@@ -91,7 +90,6 @@ module FeatureSelection
     def inspect
       to_s
     end
-
     private
 
     def self.calculate_classes arfffile, class_col
@@ -105,7 +103,6 @@ module FeatureSelection
 
     def self.calculate_inputs arfffile, class_col
       columns = arfffile.data.clone.transpose
-      puts "#{columns.length}x#{columns[0].length}"
 
       # Remove class column
       columns.slice! class_col, 1
