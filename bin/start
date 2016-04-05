@@ -4,19 +4,21 @@ require "feature-selection"
 
 datasets = [
   FeatureSelection::Dataset.read_arff("data/wdbc.arff", 0).normalize!,
-  #FeatureSelection::Dataset.read_arff("data/movement_libras.arff").normalize!,
-  #FeatureSelection::Dataset.read_arff("data/arrhythmia.arff").normalize!
+  FeatureSelection::Dataset.read_arff("data/movement_libras.arff").normalize!,
+  FeatureSelection::Dataset.read_arff("data/arrhythmia.arff").normalize!
 ]
+file = ARFF::ARFFFile.load("data/arrhythmia.arff")
+file.save("arrhythmia_broken.arff")
 
 heuristics = {
-  # "No selection (kNN with all features)" => FeatureSelection::NoSelection,
-  # "Sequential Forward Selection" => FeatureSelection::SeqForwardSelection,
-  # "Sequential Backward Selection" => FeatureSelection::SeqBackwardSelection,
-  # "First-descent Local Search" => FeatureSelection::FirstDescent,
-  # "Maximum-descent Local Search" => FeatureSelection::MaximumDescent,
-  #"Simulated Annealing" => FeatureSelection::SimAnnealing,
+  "No selection (kNN with all features)" => FeatureSelection::NoSelection,
+  "Sequential Forward Selection" => FeatureSelection::SeqForwardSelection,
+  "Sequential Backward Selection" => FeatureSelection::SeqBackwardSelection,
+  "First-descent Local Search" => FeatureSelection::FirstDescent,
+  "Maximum-descent Local Search" => FeatureSelection::MaximumDescent,
+  "Simulated Annealing" => FeatureSelection::SimAnnealing,
   "Basic Tabu Search" => FeatureSelection::BasicTabuSearch,
-  #"Complete Tabu Search" => FeatureSelection::TabuSearch
+  "Complete Tabu Search" => FeatureSelection::TabuSearch
 }
 
 datasets.each do |dataset|
@@ -25,21 +27,19 @@ datasets.each do |dataset|
   ev = FeatureSelection::Evaluator.new folds: 2, repeats: 5
 
   heuristics.each do |name, heuristic|
-    #fork do
-      puts "", "-" * 80, "|#{name.center(78)}|", "-" * 80
-      evaluation = ev.evaluate heuristic, dataset, csv: true
+    puts "", "-" * 80, "|#{name.center(78)}|", "-" * 80
+    evaluation = ev.evaluate heuristic, dataset, csv: true
 
-      output = File.new("out/#{dataset.name}_#{heuristic.name}_#{Time.now.xmlschema}.log", "w")
-      output << evaluation[:csv]
-      output.close
+    output = File.new("out/#{dataset.name}_#{heuristic.name}_#{Time.now.xmlschema}.log", "w")
+    output << evaluation[:csv]
+    output.close
 
-      results = evaluation[:results]
-      puts "-" * 80, "Summary".center(80)
-      puts "Fitness in training (mean): #{results[:training].reduce(&:+)/results[:training].length}"
-      puts "Fitness in test (mean): #{results[:test].reduce(&:+)/results[:test].length}"
-      puts "Reduction ratio: #{results[:reduction].reduce(&:+)/results[:reduction].length}"
-      puts "Time spent: total #{results[:time].reduce(&:+)}, mean #{results[:time].reduce(&:+)/results[:time].length}"
-    #end
+    results = evaluation[:results]
+    puts "-" * 80, "Summary".center(80)
+    puts "Fitness in training (mean): #{results[:training].reduce(&:+)/results[:training].length}"
+    puts "Fitness in test (mean): #{results[:test].reduce(&:+)/results[:test].length}"
+    puts "Reduction ratio: #{results[:reduction].reduce(&:+)/results[:reduction].length}"
+    puts "Time spent: total #{results[:time].reduce(&:+)}, mean #{results[:time].reduce(&:+)/results[:time].length}"
   end
 end
 

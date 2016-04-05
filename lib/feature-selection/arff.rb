@@ -166,7 +166,7 @@ module ARFF
       elsif type =~ /\{([^\}]+)\}/
         define_attribute(name, :nominal, $1.split(',').map {|s| s.strip})
       else
-        define_attribute(name, :numeric)
+        define_attribute(name, :string)
         #raise "Attributes of type \"#{type}\" not supported (yet)"
       end
     end

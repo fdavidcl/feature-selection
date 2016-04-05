@@ -1,0 +1,6 @@
+#!/usr/bin/ruby
+require "bundler/setup"
+require "feature-selection"
+
+puts "Generating new configuration file in #{FeatureSelection::Config::DEFAULT_FILENAME}"
+FeatureSelection::Config.generate

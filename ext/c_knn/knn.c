@@ -31,6 +31,10 @@ VALUE FeatureSelection = Qnil;
 VALUE Classifier = Qnil;
 VALUE CKNearest = Qnil;
 
+static VALUE C_instances;
+static VALUE C_classes;
+static VALUE C_numerics;
+
 /*
 KNearest::KNNClassifier#leaveoneout
 
@@ -56,13 +60,26 @@ params:
   rb_random: Random object
 */
 
-double * instances = NULL;
-int * class_col = NULL;
-int * which_numeric = NULL;
-int ncol, nrow, class_count, num_neighbors;
-double FLOAT_MAX;
+static double FLOAT_MAX;
+
+void c_knn_free(int* data) {
+  free(data);
+}
 
 VALUE method_c_knn_leaveoneout(VALUE self, VALUE rb_features) {
+  double * instances = NULL;
+  int * classes = NULL;
+  int * which_numeric = NULL;
+
+  Data_Get_Struct(rb_iv_get(self, "@instances"), double, instances);
+  Data_Get_Struct(rb_iv_get(self, "@classes"), int, classes);
+  Data_Get_Struct(rb_iv_get(self, "@which_numeric"), int, which_numeric);
+
+  int nrow = NUM2INT(rb_iv_get(self, "@nrow"));
+  int ncol = NUM2INT(rb_iv_get(self, "@ncol"));
+  int num_neighbors = NUM2INT(rb_iv_get(self, "@num_neighbors"));
+  int class_count = NUM2INT(rb_iv_get(self, "@nclass"));
+
   rb_features = rb_funcall(rb_features, rb_intern("to_a"), 0);
   int correct_guesses;
   double fitness;
@@ -126,6 +143,7 @@ VALUE method_c_knn_leaveoneout(VALUE self, VALUE rb_features) {
             }
             nndist[k] = dist;
             pos[k] = j;
+
             /* Keep an extra distance if the largest current one ties with current kth */
             if (nndist[kn] <= nndist[kinit - 1])
               if (++kn == MAX_TIES - 1)
@@ -141,7 +159,11 @@ VALUE method_c_knn_leaveoneout(VALUE self, VALUE rb_features) {
 
     // use_all is true always so unneeded code has been removed
     for (j = 0; j < kinit; j++){
-      votes[class_col[pos[j]]]++;
+      if (classes[pos[j]] > 4){
+        printf("j %d - ", j);
+        printf("pos %d - ", pos[j]);
+        printf("class %d\n", classes[pos[j]]);}
+      votes[classes[pos[j]]]++;
     }
     extras = 0;
 
@@ -150,7 +172,7 @@ VALUE method_c_knn_leaveoneout(VALUE self, VALUE rb_features) {
         break;
 
       extras++;
-      votes[class_col[pos[j]]]++;
+      votes[classes[pos[j]]]++;
     }
 
     /* Use reservoir sampling to choose amongst the tied votes */
@@ -182,7 +204,7 @@ VALUE method_c_knn_leaveoneout(VALUE self, VALUE rb_features) {
 
   for (npat = 0; npat < nrow; npat++) {
     // Count correct guesses
-    correct_guesses += res[npat] == class_col[npat];
+    correct_guesses += res[npat] == classes[npat];
   }
 
   free(res);
@@ -193,36 +215,42 @@ VALUE method_c_knn_leaveoneout(VALUE self, VALUE rb_features) {
 }
 
 VALUE method_c_knn_initialize(VALUE self, VALUE rb_k, VALUE rb_dataset, VALUE rb_random_par) {
+  int ncol, nrow;
+
+  double * instances = NULL;
+  int * classes = NULL;
+  int * which_numeric = NULL;
+
   VALUE data = rb_funcall(rb_dataset, rb_intern("instances"), 0);
   VALUE rb_class = rb_funcall(rb_dataset, rb_intern("classes"), 0);
   VALUE rb_numeric = rb_funcall(rb_dataset, rb_intern("numeric_attrs"), 0);
 
   // Define global variables
-  num_neighbors = NUM2INT(rb_k);
+  rb_iv_set(self, "@num_neighbors", rb_k);
   nrow = RARRAY_LEN(data);
+  rb_iv_set(self, "@nrow", INT2NUM(nrow));
   ncol = RARRAY_LEN(rb_ary_entry(data, 0));
-  class_count = rb_funcall(rb_dataset, rb_intern("class_count"), 0);
+  rb_iv_set(self, "@ncol", INT2NUM(ncol));
+  rb_iv_set(self, "@nclass", rb_funcall(rb_dataset, rb_intern("class_count"), 0));
   FLOAT_MAX = NUM2DBL(rb_intern("Float::MAX"));
-  //rb_random = rb_random_par;
   rb_iv_set(self, "@rng", rb_random_par);
-
-  if (rb_random_par == Qnil) {
-    printf("WTF\n");
-  }
 
   instances = (double*) malloc(sizeof(double) * nrow * ncol);
 
   int i, j;
   for (i = 0; i < nrow; i++) {
     for (j = 0; j < ncol; j++) {
+      if (TYPE(rb_ary_entry(rb_ary_entry(data, i), j)) == T_STRING) {
+        rb_raise(rb_eStandardError, "A string was found within the dataset. Aborting...");
+      } else
       instances[i * ncol + j] = NUM2DBL(rb_ary_entry(rb_ary_entry(data, i), j));
     }
   }
 
-  class_col = (int*) malloc(sizeof(int) * nrow);
+  classes = (int*) malloc(sizeof(int) * nrow);
 
   for (i = 0; i < nrow; i++) {
-    class_col[i] = NUM2INT(rb_ary_entry(rb_class, i));
+    classes[i] = NUM2INT(rb_ary_entry(rb_class, i));
   }
 
   which_numeric = (int*) malloc(sizeof(int) * ncol);
@@ -231,13 +259,23 @@ VALUE method_c_knn_initialize(VALUE self, VALUE rb_k, VALUE rb_dataset, VALUE rb
     which_numeric[j] = NUM2INT(rb_ary_entry(rb_numeric, j));
   }
 
+  rb_iv_set(self, "@instances", Data_Wrap_Struct(C_instances, NULL, c_knn_free, instances));
+  rb_iv_set(self, "@classes", Data_Wrap_Struct(C_classes, NULL, c_knn_free, classes));
+  rb_iv_set(self, "@which_numeric", Data_Wrap_Struct(C_numerics, NULL, c_knn_free, which_numeric));
+
   return self;
 }
 
 void Init_c_knn(void) {
   FeatureSelection = rb_const_get(rb_cObject, rb_intern("FeatureSelection"));
   Classifier = rb_const_get(FeatureSelection, rb_intern("Classifier"));
-  CKNearest = rb_const_get(FeatureSelection, rb_intern("CKNearest"));
+  CKNearest = rb_define_class_under(FeatureSelection, "CKNearest", Classifier);
+
+  /* Wrapper classes */
+  C_instances = rb_define_class_under(CKNearest, "Instances", rb_cObject);
+  C_classes = rb_define_class_under(CKNearest, "Classes", rb_cObject);
+  C_numerics = rb_define_class_under(CKNearest, "Numerics", rb_cObject);
+
   rb_define_method(CKNearest, "initialize", method_c_knn_initialize, 3);
   rb_define_method(CKNearest, "fitness_for", method_c_knn_leaveoneout, 1);
 }
