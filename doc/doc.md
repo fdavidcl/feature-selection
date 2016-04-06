@@ -12,6 +12,9 @@ csl: doc/ieee.csl
 header-includes:
   - \usepackage{algorithmic}
   - \usepackage{algorithm}
+  - \floatname{algorithm}{Algoritmo}
+  - \renewcommand{\algorithmicrequire}{\textbf{Input:}}
+  - \renewcommand{\algorithmicensure}{\textbf{Output:}}
 ---
 
 \pagebreak
@@ -52,7 +55,7 @@ La función objetivo, a maximizar, es la proporción de aciertos sobre el total 
 \caption{Cálculo de la función objetivo}
 \begin{algorithmic}
   \STATE{aciertos $\gets$ 0}
-  \FORALL{instancia en dataset}
+  \FORALL{instancia \textbf{en} dataset}
     \STATE{predicción $\gets$ predecir-kNN(instancia, dataset$\setminus$\{instancia\})}
     \IF{predicción = clase(instancia)}
       \STATE{aciertos $\gets$ aciertos$+ 1$}
@@ -69,7 +72,7 @@ Para generar el vecindario, obtenemos vecinos mientras sean necesarios conmutand
 \begin{algorithm}
 \caption{Generación a demanda de vecindario de una solución}
 \begin{algorithmic}
-  \FORALL{bit in aleatorizar([0 ... num-características])}
+  \FORALL{bit \textbf{en} aleatorizar([0 ... num-características])}
     \STATE{vecino $\gets$ conmutar(solución-actual, bit)}
     \STATE{petición $\gets$ esperar-petición()}
     \STATE{responder(petición, [vecino, fitness(vecino)])}
@@ -93,7 +96,7 @@ Se ha implementado la búsqueda local de primer descenso y, adicionalmente, la b
 \begin{algorithmic}
   \STATE{solución-actual $\gets$ solución-aleatoria()}
   \WHILE{tenemos-soluciones-nuevas}
-    \STATE{solución-actual $\gets$ siguiente-solucion()}
+    \STATE{solución-actual $\gets$ siguiente-solucion(vecinos: vecindario)}
   \ENDWHILE
   \RETURN{solución-actual}
 \end{algorithmic}
@@ -103,8 +106,8 @@ Se ha implementado la búsqueda local de primer descenso y, adicionalmente, la b
 \caption{Técnica de selección de la búsqueda local del primer descenso}
 \begin{algorithmic}
   \STATE{siguiente $\gets$ \textbf{nil}}
-  \WHILE{es-nil(siguiente)}
-    \STATE{vecino $\gets$ nuevo-vecino()}
+  \WHILE{siguiente = \textbf{nil} \textbf{y} quedan(vecinos)}
+    \STATE{vecino $\gets$ sacar(vecinos)}
     \IF{fitness(vecino) > fitness(solución-actual)}
       \STATE{siguiente $\gets$ vecino}
     \ENDIF
@@ -118,8 +121,8 @@ Se ha implementado la búsqueda local de primer descenso y, adicionalmente, la b
 \begin{algorithmic}
   \STATE{siguiente $\gets$ \textbf{nil}}
   \STATE{mejor-encontrada $\gets$ fitness(solución-actual)}
-  \WHILE{quedan-vecinos}
-    \STATE{vecino $\gets$ nuevo-vecino()}
+  \WHILE{quedan(vecinos)}
+    \STATE{vecino $\gets$ sacar(vecinos)}
     \IF{fitness(vecino) > mejor-encontrada}
       \STATE{siguiente $\gets$ vecino}
       \STATE{mejor-encontrada $\gets$ fitness(vecino)}
@@ -131,17 +134,57 @@ Se ha implementado la búsqueda local de primer descenso y, adicionalmente, la b
 
 ## Enfriamiento simulado
 
+Para el enfriamiento simulado, se calcula la temperatura inicial en función de la calidad de la solución aleatoria inicial, siguiendo la siguiente fórmula:
+$$T_{\mathrm{inicial}} = \frac{\mu\times \mathrm{fitness}(S_{\mathrm{inicial}})}{-\log(\phi)},$$
+donde $\log$ es el logaritmo natural, y $\phi$ y $\mu$ son parámetros que representan el comportamiento de aceptación de una solución con cierto empeoramiento respecto de la actual. Ambos se ajustan a $0,3$ en las ejecuciones.
+
+El esquema de enfriamiento de la temperatura es el de Cauchy modificado:
+$$T_{\mathrm{siguiente}} = \frac{T}{1 + \beta\times T}\mbox{, donde }\beta=\frac{T_{\mathrm{inicial}} - T_{\mathrm{final}}}{M\times T_{\mathrm{inicial}} \times T_{\mathrm{final}}}$$
+y $M$ representa el número máximo de enfriamientos a realizar.
+
+El algoritmo \ref{simann} describe el proceso de enfriamiento del algoritmo mientras va eligiendo soluciones, mientras que el algoritmo \ref{metropolis} describe la selección de una solución mediante el criterio de Metropolis.
 
 \begin{algorithm}
-\caption{Técnica de selección de la búsqueda local del máximo descenso}
+\caption{Enfriamiento simulado}
+\label{simann}
+\begin{algorithmic}
+  \STATE{temperatura $\gets$ temperatura-inicial}
+  \STATE{solución-actual $\gets$ solución-aleatoria()}
+  \STATE{solución-mejor $\gets$ solución-actual}
+  \STATE{hay-éxitos $\gets$ \textbf{true}}
+  \WHILE{\textbf{no} enfriado() \textbf{y} hay-éxitos}
+    \STATE{generados $\gets$ 0}
+    \STATE{seleccionados $\gets$ 0}
+    \WHILE{generados < máximo-generados \textbf{y} seleccionados < máximo-éxitos}
+      \STATE{seleccionado $\gets$ \textbf{nil}}
+      \STATE{seleccionado $\gets$ metropolis(vecinos: vecindario(máximo-generados $-$ generados))}
+      \IF{seleccionado $\neq$ \textbf{nil}}
+        \STATE{seleccionados $\gets$ seleccionados + 1}
+        \STATE{solución-actual $\gets$ seleccionado}
+        \IF{fitness(solución-actual) > fitness(solución-mejor)}
+          \STATE{solución-mejor $\gets$ solución-actual}
+        \ENDIF
+      \ELSE
+        \STATE{hay-éxitos $\gets$ \textbf{false}}
+      \ENDIF
+    \ENDWHILE
+    \STATE{temperatura $\gets \frac{\mathrm{temperatura}}{1+\beta\times\mathrm{temperatura}}$}
+  \ENDWHILE
+  \RETURN{solución-mejor}
+\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}
+\caption{Selección de una solución por criterio de Metropolis}
+\label{metropolis}
 \begin{algorithmic}
   \STATE{siguiente $\gets$ \textbf{nil}}
-  \STATE{mejor-encontrada $\gets$ fitness(solución-actual)}
-  \WHILE{quedan-vecinos}
-    \STATE{vecino $\gets$ nuevo-vecino()}
-    \IF{fitness(vecino) > mejor-encontrada}
+  \WHILE{siguiente = \textbf{nil} \textbf{y} quedan(vecinos)}
+    \STATE{vecino $\gets$ sacar(vecinos)}
+    \STATE{generados $\gets$ generados + 1}
+    \STATE{diferencia $\gets$ fitness(vecino) - fitness(solución-actual)}
+    \IF{diferencia $> 0$ \textbf{o} (diferencia $< 0$ \textbf{y} aleatorio() $\leq e^{\frac{\mathrm{diferencia}}{\mathrm{temperatura}}}$ )}
       \STATE{siguiente $\gets$ vecino}
-      \STATE{mejor-encontrada $\gets$ fitness(vecino)}
     \ENDIF
   \ENDWHILE
   \RETURN{siguiente}
@@ -151,40 +194,67 @@ Se ha implementado la búsqueda local de primer descenso y, adicionalmente, la b
 
 ## Búsqueda tabú
 
+Para la búsqueda tabú, se ha desarrollado el algoritmo de una iteración usando la memoria a corto plazo (algoritmo \ref{tabu-una}), que sirve tanto para la búsqueda tabú básica (algoritmo \ref{tabu-corto}) como para la extendida (algoritmo \ref{tabu-largo}).
 
 \begin{algorithm}
-\caption{Técnica de selección de la búsqueda local del máximo descenso}
+\caption{Búsqueda tabú con memoria a corto plazo}
+\label{tabu-corto}
 \begin{algorithmic}
-  \STATE{siguiente $\gets$ \textbf{nil}}
-  \STATE{mejor-encontrada $\gets$ fitness(solución-actual)}
-  \WHILE{quedan-vecinos}
-    \STATE{vecino $\gets$ nuevo-vecino()}
-    \IF{fitness(vecino) > mejor-encontrada}
-      \STATE{siguiente $\gets$ vecino}
-      \STATE{mejor-encontrada $\gets$ fitness(vecino)}
-    \ENDIF
+  \STATE{lista-tabú $\gets$ []}
+  \STATE{restantes $\gets$ máximo-iteraciones}
+  \WHILE{restantes $>0$}
+    \STATE{solución-actual $\gets$ iteración-corto-plazo()}
+    \STATE{restantes $\gets$ restantes - 1}
   \ENDWHILE
-  \RETURN{siguiente}
+\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}
+\caption{Iteración de memoria a corto plazo}
+\label{tabu-una}
+\begin{algorithmic}
+  \STATE{vecinos $\gets$ vecindario(máximo-generados)}
+  \STATE{actual $\gets$ \textbf{nil}}
+  \FORALL{vecino \textbf{en} vecinos}
+    \IF{fitness(vecino) > fitness(solución-mejor) \textbf{o} (\textbf{no} índice-modificado \textbf{en} lista-tabú \textbf{y} fitness(vecino) > fitness(actual))}
+      \STATE{actual $\gets$ vecino}
+    \ENDIF
+  \ENDFOR
+  \STATE{borrar(lista-tabú, índice-modificado)}
+  \COMMENT{si el índice ya estaba en la lista, lo quitamos y colocamos al final de nuevo}
+  \STATE{lista-tabú \textbf{<<} índice-modificado}
+  \IF{tamaño(lista-tabú) = máximo-tamaño}
+    \STATE{elimina-primero(lista-tabú)}
+  \ENDIF
+  \RETURN{actual}
 \end{algorithmic}
 \end{algorithm}
 
 
 ## Búsqueda tabú extendida
 
+La búsqueda tabú con memoria a largo plazo realiza iteraciones de la anterior de forma controlada, es decir, reinicializa la búsqueda en otro lugar del espacio de soluciones cuando detecta que la búsqueda a corto plazo lleva cierto tiempo sin producir mejora. Dicha reinicialización se escoge aleatoriamente de entre una solución diversa (atendiendo a la memoria de frecuencias que se actualiza al asignar una solución), una solución aleatoria y la mejor solución encontrada.  
 
 \begin{algorithm}
-\caption{Técnica de selección de la búsqueda local del máximo descenso}
+\caption{Búsqueda tabú con memoria a largo plazo}
+\label{tabu-largo}
 \begin{algorithmic}
-  \STATE{siguiente $\gets$ \textbf{nil}}
-  \STATE{mejor-encontrada $\gets$ fitness(solución-actual)}
-  \WHILE{quedan-vecinos}
-    \STATE{vecino $\gets$ nuevo-vecino()}
-    \IF{fitness(vecino) > mejor-encontrada}
-      \STATE{siguiente $\gets$ vecino}
-      \STATE{mejor-encontrada $\gets$ fitness(vecino)}
+  \STATE{lista-tabú $\gets$ []}
+  \STATE{cuenta-atrás $\gets$ máximo-iteraciones-sin-mejora}
+  \STATE{restantes $\gets$ máximo-iteraciones}
+  \WHILE{restantes $>0$}
+    \STATE{mejor-hasta-ahora $\gets$ fitness(solución-mejor)}
+    \STATE{solución-actual $\gets$ iteración-corto-plazo()}
+    \STATE{actualiza-frecuencias(solución-actual)}
+    \STATE{restantes $\gets$ restantes - 1}
+    \STATE{cuenta-atrás $\gets$ \textbf{if} fitness(solución-actual) > mejor-hasta-ahora \textbf{then} máximo-iteraciones-sin-mejora \textbf{else} cuenta-atrás - 1 \textbf{end if}}
+    \IF{cuenta-atrás = 0}
+      \STATE{lista-tabú $\gets$ []}
+      \STATE{tamaño-máximo $\gets$ elige-aleatorio($0.5\times$tamaño-máximo, $1.5\times$tamaño-máximo)}
+      \STATE{solución-actual $\gets$ elige-aleatorio(solución-diversa(), solución-diversa(), solución-aleatoria(), solución-mejor)}
+      \STATE{cuenta-atrás $\gets$ máximo-iteraciones-sin-mejora}
     \ENDIF
   \ENDWHILE
-  \RETURN{siguiente}
 \end{algorithmic}
 \end{algorithm}
 
@@ -193,11 +263,11 @@ Se ha implementado la búsqueda local de primer descenso y, adicionalmente, la b
 
 # Implementación de la práctica
 
-La implementación de los algoritmos se ha realizado en el lenguaje Ruby, con la intención de aprovechar su expresividad a la hora de iterar de distintas formas por vectores y matrices, entre otras ventajas.
+La implementación de los algoritmos se ha realizado en el lenguaje Ruby, con la intención de aprovechar su expresividad a la hora de iterar de distintas formas por vectores y matrices [@enumerators], entre otras ventajas.
 
 ## Arquitectura
 
-La aplicación tiene la estructura común de una librería Ruby (o *gema*), con los códigos fuente en el directorio `lib/` y los útiles para su ejecución en el directorio `bin/`. El algoritmo kNN está implementado en C[^knnclass] en el directorio `ext/c_knn/`. Además, las dependencias y otros metadatos están especificados en el archivo `feature-selection.gemspec` de forma que la gema sea fácil de configurar.
+La aplicación tiene la estructura común de una librería Ruby (o *gema*), con los códigos fuente en el directorio `lib/` y los útiles para su ejecución en el directorio `bin/`. El algoritmo kNN está implementado en C[^knnclass] en el directorio `ext/c_knn/`, para lo cual se hace uso de la API para C de Ruby, documentada en [@anselm]. Además, las dependencias y otros metadatos están especificados en el archivo `feature-selection.gemspec` de forma que la gema sea fácil de configurar.
 
 [^knnclass]: La implementación de kNN se ha adaptado del código C del paquete `class` [@rclass] para R.
 
