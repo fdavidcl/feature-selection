@@ -297,6 +297,61 @@ El guion `bin/start` realiza las ejecuciones de todos los algoritmos sobre todos
 
 # Experimentación realizada
 
+## Resumen de resultados y gráficos obtenidos
+
+### Rendimiento sobre los datos de entrenamiento
+
+\includegraphics[width=\textwidth]{stats/img/boxplot_training_wdbc.png}
+
+\includegraphics[width=\textwidth]{stats/img/boxplot_training_movement_libras.png}
+
+\includegraphics[width=\textwidth]{stats/img/boxplot_training_arrhythmia.png}
+
+### Rendimiento sobre los datos de test
+
+\includegraphics[width=\textwidth]{stats/img/boxplot_test_wdbc.png}
+
+\includegraphics[width=\textwidth]{stats/img/boxplot_test_movement_libras.png}
+
+\includegraphics[width=\textwidth]{stats/img/boxplot_test_arrhythmia.png}
+
 ## Análisis de resultados
+
+# Anexo: Tablas completas de resultados
+
+**Nota**: Se realizaron los paquetes de 10 ejecuciones para cada heurística y dataset en paralelo, por lo que los tiempos de ejecución se ven afectados en que las primeras ejecuciones son en general más lentas que las últimas (ya que conforme se van completando ejecuciones se libera tiempo de CPU para las heurísticas que requieren más tiempo). En una ejecución secuencial, los tiempos serían más similares a los últimos de cada tabla.
+
+## WDBC
+\input{stats/latex/wdbc_NoSelection.tex}
+\input{stats/latex/wdbc_SeqForwardSelection.tex}
+\input{stats/latex/wdbc_SeqBackwardSelection.tex}
+\input{stats/latex/wdbc_FirstDescent.tex}
+\input{stats/latex/wdbc_MaximumDescent.tex}
+\input{stats/latex/wdbc_SimAnnealing.tex}
+\input{stats/latex/wdbc_BasicTabuSearch.tex}
+\input{stats/latex/wdbc_TabuSearch.tex}
+\clearpage
+
+## Movement Libras
+\input{stats/latex/movement_libras_NoSelection.tex}
+\input{stats/latex/movement_libras_SeqForwardSelection.tex}
+\input{stats/latex/movement_libras_SeqBackwardSelection.tex}
+\input{stats/latex/movement_libras_FirstDescent.tex}
+\input{stats/latex/movement_libras_MaximumDescent.tex}
+\input{stats/latex/movement_libras_SimAnnealing.tex}
+\input{stats/latex/movement_libras_BasicTabuSearch.tex}
+\input{stats/latex/movement_libras_TabuSearch.tex}
+\clearpage
+
+## Arrhythmia
+\input{stats/latex/arrhythmia_NoSelection.tex}
+\input{stats/latex/arrhythmia_SeqForwardSelection.tex}
+\input{stats/latex/arrhythmia_SeqBackwardSelection.tex}
+\input{stats/latex/arrhythmia_FirstDescent.tex}
+\input{stats/latex/arrhythmia_MaximumDescent.tex}
+\input{stats/latex/arrhythmia_SimAnnealing.tex}
+\input{stats/latex/arrhythmia_BasicTabuSearch.tex}
+\input{stats/latex/arrhythmia_TabuSearch.tex}
+\clearpage
 
 # Referencias
