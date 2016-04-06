@@ -1,19 +1,22 @@
 /*
-*  class/src/class.c by W. N. Venables and B. D. Ripley  Copyright (C) 1994-2002
-*
-*  This program is free software; you can redistribute it and/or modify
-*  it under the terms of the GNU General Public License as published by
-*  the Free Software Foundation; either version 2 or 3 of the License
-*  (at your option).
-*
-*  This program is distributed in the hope that it will be useful,
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-*  GNU General Public License for more details.
-*
-*  A copy of the GNU General Public License is available at
-*  http://www.r-project.org/Licenses/
-*
+Native implementation of kNN leave-one-out cross validation for Ruby
+David Charte (C) 2016
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+Based on the following work:
+*  class/src/class.c by W. N. Venables and B. D. Ripley  Copyright (C) 1994-2002 (GPLv2)
 */
 
 #include <ruby.h>
@@ -93,8 +96,7 @@ VALUE method_c_knn_leaveoneout(VALUE self, VALUE rb_features) {
      Sint *votes, Sint *nc, Sint *cv, Sint *use_all
   ***************************************************************/
   int   i, index, j, k, k1, kinit = num_neighbors, kn, l = 0, mm, npat, ntie, extras;
-  int   pos[MAX_TIES], nclass[MAX_TIES];
-  int   j1, j2, needed, t;
+  int   pos[MAX_TIES];
   double dist, tmp, nndist[MAX_TIES];
 
   // Prediction results

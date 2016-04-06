@@ -27,19 +27,21 @@ datasets.each do |dataset|
   ev = FeatureSelection::Evaluator.new folds: 2, repeats: 5
 
   heuristics.each do |name, heuristic|
-    puts "", "-" * 80, "|#{name.center(78)}|", "-" * 80
-    evaluation = ev.evaluate heuristic, dataset, csv: true
+    fork do
+      puts "", "-" * 80, "|#{name.center(78)}|", "-" * 80
+      evaluation = ev.evaluate heuristic, dataset, csv: true
 
-    output = File.new("out/#{dataset.name}_#{heuristic.name}_#{Time.now.xmlschema}.log", "w")
-    output << evaluation[:csv]
-    output.close
+      output = File.new("out/buenos_#{dataset.name}_#{heuristic.name}_#{Time.now.xmlschema}.log", "w")
+      output << evaluation[:csv]
+      output.close
 
-    results = evaluation[:results]
-    puts "-" * 80, "Summary".center(80)
-    puts "Fitness in training (mean): #{results[:training].reduce(&:+)/results[:training].length}"
-    puts "Fitness in test (mean): #{results[:test].reduce(&:+)/results[:test].length}"
-    puts "Reduction ratio: #{results[:reduction].reduce(&:+)/results[:reduction].length}"
-    puts "Time spent: total #{results[:time].reduce(&:+)}, mean #{results[:time].reduce(&:+)/results[:time].length}"
+      results = evaluation[:results]
+      puts "-" * 80, "Summary".center(80)
+      puts "Fitness in training (mean): #{results[:training].reduce(&:+)/results[:training].length}"
+      puts "Fitness in test (mean): #{results[:test].reduce(&:+)/results[:test].length}"
+      puts "Reduction ratio: #{results[:reduction].reduce(&:+)/results[:reduction].length}"
+      puts "Time spent: total #{results[:time].reduce(&:+)}, mean #{results[:time].reduce(&:+)/results[:time].length}"
+    end
   end
 end
 
