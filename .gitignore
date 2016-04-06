@@ -52,3 +52,6 @@ log/
 *.o
 *.so
 *.fuse*
+
+stats/img/*.png
+stats/latex/*.tex
