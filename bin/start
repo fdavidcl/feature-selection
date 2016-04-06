@@ -3,9 +3,9 @@ require "bundler/setup"
 require "feature-selection"
 
 datasets = [
-  FeatureSelection::Dataset.read_arff("../../data/wdbc.arff", 0),
-  FeatureSelection::Dataset.read_arff("../../data/movement_libras.arff"),
-  FeatureSelection::Dataset.read_arff("../../data/arrhythmia.arff")
+  FeatureSelection::Dataset.read_arff("data/wdbc.arff", 0).normalize!,
+  FeatureSelection::Dataset.read_arff("data/movement_libras.arff").normalize!,
+  FeatureSelection::Dataset.read_arff("data/arrhythmia.arff").normalize!
 ]
 
 heuristics = {

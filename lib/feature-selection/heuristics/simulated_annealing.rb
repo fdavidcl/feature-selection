@@ -5,7 +5,7 @@ module FeatureSelection
     def initialize dataset, debug: false, random: Random.new(CONFIG.random_seed)
       super
 
-      @initial_temp = CONFIG.simulated_annealing[:worsening] * @classifier.fitness_for(@solution) / -Math.log(CONFIG.simulated_annealing[:prob_accept])
+      @initial_temp = CONFIG.simulated_annealing[:worsening] * fitness_for(@solution) / -Math.log(CONFIG.simulated_annealing[:prob_accept])
       @final_temp = 1e-3
       @max_generated = CONFIG.simulated_annealing[:max_neighbors_factor] * @dataset.input_count
       @max_selections = CONFIG.simulated_annealing[:max_selections_factor] * @max_generated

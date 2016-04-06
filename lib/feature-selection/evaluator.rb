@@ -20,7 +20,7 @@ module FeatureSelection
         start = Time.now
         solution, fitness = heuristic.run
         finish = Time.now
-        evaluation = heuristic.classifier.class.new(CONFIG.knn[:num_neighbors], test).fitness_for(solution)
+        evaluation = heuristic.classifier.class.new(CONFIG.knn[:num_neighbors], test, Random.new(@seeds[index])).fitness_for(solution)
         reduction = solution.count(0).to_f/solution.length
 
         [solution, fitness, evaluation, reduction, finish - start]

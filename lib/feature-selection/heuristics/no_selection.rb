@@ -11,7 +11,7 @@ module FeatureSelection
     def run
       [
         @solution,
-        @classifier.fitness_for(@solution)
+        fitness_for(@solution)
       ]
     end
   end

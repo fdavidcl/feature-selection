@@ -45,35 +45,12 @@ install_ruby() {
     inform "Installing RVM..."
     sleep 1
     gpg --keyserver hkp://keys.gnupg.net --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3
-    \curl -sSL https://get.rvm.io | bash -s stable --ruby=$desired_version
+    \curl -sSL https://get.rvm.io | bash -s stable --ruby=$desired_version --auto-dotfiles
     inform "Using Ruby $desired_version..."
-    source ~/.profile
+    source ~/.rvm/scripts/rvm
     rvm use $desired_version
     return 0
   ) || (
-    return -1
-  )
-}
-
-configure_r() {
-  inform "Searching for R..."
-  which -a R && (
-    inform "OK! R found, installing dependencies..."
-
-    mkdir -p r_libs
-    R_LIBS="`pwd`/r_libs" R --no-save << EOF
-      deps <- c('Rserve', 'class', 'foreign')
-      for (dep in deps) {
-        if (!(dep %in% installed.packages()[, "Package"]))
-          install.packages(dep, repos='http://cran.r-project.org')
-      }
-      library(Rserve)
-      Rserve(args = '--no-save')
-EOF
-    chmod u+x r_libs/Rserve/R/Rserve
-    return 0
-  ) || (
-    inform "Couldn't find an R installation. Please install R to continue. Aborting..."
     return -1
   )
 }
@@ -93,6 +70,8 @@ configure_ruby() {
     )
     inform "Installing dependencies..."
     gem install bundler --conservative && bundle install
+    inform "Compiling native extensions..."
+    rake compile
     return 0
   ) || (
     inform "Couldn't find a Ruby installation"
@@ -104,7 +83,6 @@ configure_ruby() {
 }
 
 setup() {
-  configure_r || exit -1
   configure_ruby || exit -2
 
   inform "Everything set up! You can run bin/start to start the program"

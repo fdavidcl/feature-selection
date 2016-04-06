@@ -47,3 +47,11 @@ build/
 
 r_libs/
 log/
+
+# compiled stuff
+*.o
+*.so
+*.fuse*
+
+stats/img/*.png
+stats/latex/*.tex
