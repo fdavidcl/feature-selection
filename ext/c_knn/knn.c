@@ -22,8 +22,6 @@ Based on the following work:
 #include <ruby.h>
 #include <math.h>
 #include <float.h>
-// remove later:
-#include <stdio.h>
 
 #define EPS 1e-4		/* relative test of equality of distances */
 #define MAX_TIES 1000
@@ -37,31 +35,6 @@ VALUE CKNearest = Qnil;
 static VALUE C_instances;
 static VALUE C_classes;
 static VALUE C_numerics;
-
-/*
-KNearest::KNNClassifier#leaveoneout
-
-params:
-  rb_k: number of neighbors
-  ~~rb_l: minimum vote for definite decision, otherwise ‘doubt’ (0 by default)~~
-  ~~rb_train_rows: number of training rows~~
-  ~~rb_test_rows: number of test rows (when using cv, pass same value as rb_train_rows)~~
-  ~~rb_attributes: number of columns (input attributes)~~
-  rb_train: training dataset (only input attributes)
-  rb_class: class column (as factor?)
-  ~~rb_test: test dataset~~
-  ~~res~~
-  ~~pr~~
-  ~~rb_votes: number of classes + 1 (?)~~
-  ~~rb_nclass: number of classes~~
-  ~~rb_cv: using cross-validation? (leaveoneout)~~
-  ~~rb_use_all: controls handling of ties. If true, all distances equal to
-          the ‘k’th largest are included. If false, a random selection
-          of distances equal to the ‘k’th is chosen to use exactly ‘k’
-          neighbours.~~
-  rb_features: bit array of selected features
-  rb_random: Random object
-*/
 
 static double FLOAT_MAX;
 

@@ -55,29 +55,6 @@ install_ruby() {
   )
 }
 
-configure_r() {
-  inform "Searching for R..."
-  which -a R && (
-    inform "OK! R found, installing dependencies..."
-
-    mkdir -p r_libs
-    R_LIBS="`pwd`/r_libs" R --no-save << EOF
-      deps <- c('Rserve', 'class', 'foreign')
-      for (dep in deps) {
-        #if (!(dep %in% installed.packages()[, "Package"]))
-          install.packages(dep, repos='http://cran.r-project.org')
-      }
-      library(Rserve)
-      Rserve(args = '--no-save')
-EOF
-    chmod u+x r_libs/Rserve/R/Rserve
-    return 0
-  ) || (
-    inform "Couldn't find an R installation. Please install R to continue. Aborting..."
-    return -1
-  )
-}
-
 configure_ruby() {
   inform "Searching for Ruby..."
   local desired_version=2.3
@@ -106,7 +83,6 @@ configure_ruby() {
 }
 
 setup() {
-  #configure_r || exit -1
   configure_ruby || exit -2
 
   inform "Everything set up! You can run bin/start to start the program"
