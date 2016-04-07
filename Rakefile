@@ -11,7 +11,9 @@ task :default => :spec
 
 task :doc => 'doc/doc.pdf'
 
-file 'doc/doc.pdf' => 'doc/doc.md' do |t|
+file 'doc/doc.pdf' => ['doc/doc.md', 'stats/stats.R'] do |t|
+  puts "Generating tables and graphics..."
+  `cd stats; ./stats.R; cd ..`
   puts "Compiling #{t.prerequisites[0]}->#{t.name} with pandoc..."
   `pandoc #{t.prerequisites[0]} -o #{t.name} --filter pandoc-eqnos --filter pandoc-citeproc --latex-engine=xelatex`
 end
