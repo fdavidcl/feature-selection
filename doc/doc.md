@@ -1,7 +1,7 @@
 ---
 title: "Práctica 1.b: Búsquedas por Trayectorias (Selección de características)"
 subtitle: "Búsquedas locales básicas, Enfriamiento simulado, Búsqueda tabú y Búsqueda tabú extendida"
-author: "Francisco David Charte Luque <<fdavidcl@correo.ugr.es>>"
+author: "Francisco David Charte Luque (77368864S) <<fdavidcl@correo.ugr.es>>"
 date: "Grupo de prácticas 2 (Jueves 17:30 - 19:30)"
 toc: yes
 lang: spanish
@@ -9,12 +9,14 @@ fontsize: 11pt
 geometry: "a4paper, top=2.5cm, bottom=2.5cm, left=3cm, right=3cm"
 bibliography: doc/references.bib
 csl: doc/ieee.csl
+numbersections: yes
 header-includes:
   - \usepackage{algorithmic}
   - \usepackage{algorithm}
   - \floatname{algorithm}{Algoritmo}
   - \renewcommand{\algorithmicrequire}{\textbf{Input:}}
   - \renewcommand{\algorithmicensure}{\textbf{Output:}}
+  - \usepackage{pdflscape}
 ---
 
 \pagebreak
@@ -23,7 +25,7 @@ header-includes:
 
 ## Clasificación en Minería de Datos
 
-El problema de clasificación consiste en, dado un conjunto de instancias ya clasificadas, aprender la suficiente información como para predecir la(s) clase(s) de nuevas instancias sin clasificar.
+El problema de clasificación consiste en, dado un conjunto de instancias ya clasificadas, realizar aprendizaje para obtener un conocimiento suficiente como para predecir la(s) clase(s) de nuevas instancias sin clasificar.
 
 ## Algoritmo kNN
 
@@ -83,7 +85,12 @@ Para generar el vecindario, obtenemos vecinos mientras sean necesarios conmutand
 ## Otras observaciones
 
 ### Generación de números aleatorios
-Los algoritmos utilizados requieren de generadores de números aleatorios con suficiente equidistribución (esto es, que generen una distribución de probabilidad similar a la uniforme). Los generadores de números aleatorios usados en la implementación son los propios de ambos lenguajes de programación utilizados, Ruby y R. Ambos siguen el algoritmo denominado *Mersenne Twister* para generar los aleatorios [@rmersenne][@rubyrandom], que asegura una distribución suficientemente uniforme para propósito general [@Matsumoto].
+Los algoritmos utilizados requieren de generadores de números aleatorios con suficiente equidistribución (esto es, que generen una distribución de probabilidad similar a la uniforme). Los generadores de números aleatorios usados en la implementación son los propios del lenguaje de programación utilizado, objetos de la clase `Random` de Ruby. Siguen el algoritmo denominado *Mersenne Twister* para generar los aleatorios [@rubyrandom], que asegura una distribución suficientemente uniforme para propósito general [@Matsumoto].
+
+### Reproducibilidad
+Los resultados obtenidos son reproducibles por otros usuarios ya que se ha fijado una semilla aleatoria por defecto a 1, que se utiliza para generar las semillas aleatorias que se usarán en las distintas ejecuciones (de esta forma siempre se generan las mismas semillas).
+
+Además, las tablas y gráficos obtenidos resultan de la ejecución del guion `stats/stats.R` que se incluye en el código fuente, a partir de los archivos CSV que se obtengan como salida del programa en `out/` y se copien en el directorio `stats/csv/`. Este mismo documento se puede generar al completo mediante el comando `rake doc`.
 
 # Algoritmos empleados
 
@@ -297,7 +304,54 @@ El guion `bin/start` realiza las ejecuciones de todos los algoritmos sobre todos
 
 # Experimentación realizada
 
+## Casos del problema y parámetros
+
+Los conjuntos de datos dirigidos a clasificación que se han utilizado para la experimentación son los siguientes:
+
+* *Wisconsin Diagnostic Breast Cancer* (WDBC): Un dataset binario con 30 atributos de entrada y 569 instancias. Las características representan distintos aspectos de un núcleo celular y las clases distinguen entre los benignos y los malignos.
+* *Movement Libras*: Dataset multiclase (15 clases) con 90 atributos de entrada y 360 instancias. Las instancias son una extracción de datos a partir de pequeños vídeos donde se muestran signos de la lengua brasileña de signos, y la clase referencia un tipo de movimiento.
+* *Arrhythmia*: Dataset multiclase (5 clases) con 278 atributos de entrada y 386 instancias. Los atributos representan diferentes datos médicos de un individuo y las clases son la ausencia de arritmia y distintos tipos de arritmia.
+
+Los parámetros se han establecido de la siguiente forma:
+
+* Semilla aleatoria: 1. Se utiliza para generar 10 semillas aleatorias distintas, que resultan ser 12710950, 4686060, 6762381, 12325961, 491264, 6662860, 12656262, 9554768, 7361473 y 10715281.
+* Número de vecinos para kNN: 3.
+* Tipo de evaluación de las heurísticas: validación cruzada 5x2
+* Máximo de evaluaciones para todos los algoritmos: 15000
+* Enfriamiento simulado
+    * Máximo de vecinos generados por enfriamiento: $10\times n$
+    * Máximo de vecinos seleccionados por enfriamiento: $n$
+    * Proporción de empeoramiento ($\mu$): 0,3
+    * Probabilidad de aceptación ($\phi$): 0,3
+    * Temperatura final: $10^{-3}$
+* Búsqueda tabú
+    * Número de vecinos generados: 30
+    * Tamaño inicial de la lista tabú: $\frac 1 3$
+
 ## Resumen de resultados y gráficos obtenidos
+
+### Tablas de resultados por heurística
+
+**Nota**: Se realizaron los paquetes de 10 ejecuciones para cada heurística y dataset en paralelo, por lo que los tiempos de ejecución se ven afectados en que las primeras ejecuciones son en general más lentas que las últimas (ya que conforme se van completando ejecuciones se libera tiempo de CPU para las heurísticas que requieren más tiempo). En una ejecución secuencial, los tiempos serían más similares a los últimos de cada tabla.
+
+Las tablas que se incluyen en las páginas siguientes recogen la información obtenida a partir de las ejecuciones de cada heurística sobre todos los datasets. La tabla \ref{NoSelection} recoge los resultados del algoritmo 3-NN sin selección de características. Las tablas \ref{SeqForwardSelection} y \ref{SeqBackwardSelection} corresponden a los algoritmos *greedy* que sirven como punto de partida para comparar; las \ref{FirstDescent} y \ref{MaximumDescent} muestran los datos de las búsquedas locales con trayectorias simples, la tabla \ref{SimAnnealing} corresponde al enfriamiento simulado y las dos últimas, \ref{BasicTabuSearch} y \ref{TabuSearch}, a las búsquedas tabú básica y extendida respectivamente.
+
+\begin{landscape}
+\input{stats/latex/NoSelection.tex}
+\input{stats/latex/SeqForwardSelection.tex}
+\input{stats/latex/SeqBackwardSelection.tex}
+\input{stats/latex/FirstDescent.tex}
+\input{stats/latex/MaximumDescent.tex}
+\input{stats/latex/SimAnnealing.tex}
+\input{stats/latex/BasicTabuSearch.tex}
+\input{stats/latex/TabuSearch.tex}
+\clearpage
+
+\subsubsection{Resultados globales}
+La tabla \ref{global} presenta las medias de los resultados obtenidos para cada heurística:
+\input{stats/latex/global.tex}
+\clearpage
+\end{landscape}
 
 ### Rendimiento sobre los datos de entrenamiento
 
@@ -317,41 +371,22 @@ El guion `bin/start` realiza las ejecuciones de todos los algoritmos sobre todos
 
 ## Análisis de resultados
 
-# Anexo: Tablas completas de resultados
+De los gráficos anteriores se deduce que la tendencia general de los algoritmos es similar a lo largo de los distintos conjuntos de datos. La única excepción puede ser el buen resultado de la técnica *greedy* Sequential Forward Selection sobre el dataset Arrhythmia, que no se refleja en el resto de datasets.
 
-**Nota**: Se realizaron los paquetes de 10 ejecuciones para cada heurística y dataset en paralelo, por lo que los tiempos de ejecución se ven afectados en que las primeras ejecuciones son en general más lentas que las últimas (ya que conforme se van completando ejecuciones se libera tiempo de CPU para las heurísticas que requieren más tiempo). En una ejecución secuencial, los tiempos serían más similares a los últimos de cada tabla.
+Atendiendo a las técnicas *greedy*, podemos observar que, en WDBC y Movement Libras, Sequential Forward Selection optimiza mejor el resultado en la partición de entrenamiento, pero Sequential Backward Selection tiene mejor resultado en la partición de test, posiblemente porque mantiene la mayor parte de las características, mientras que SFS produce una solución con una tasa de reducción muy alta que, aunque ajustándose bien a la partición de entrenamiento, no tiene por qué ser tan adecuada para la de test. El excepcional comportamiento de SFS en Arrhythmia es más difícil de explicar, pero hemos de notar que este dataset tiene muchas más características que los otros, y por tanto la ventaja de SFS puede residir en que consigue una tasa de reducción alta, es decir, una solución con suficientes características como para realizar una buena clasificación pero sin demasiadas como para que la idea del vecino más cercano pueda perder significado, como se ha comentado previamente.
 
-## WDBC
-\input{stats/latex/wdbc_NoSelection.tex}
-\input{stats/latex/wdbc_SeqForwardSelection.tex}
-\input{stats/latex/wdbc_SeqBackwardSelection.tex}
-\input{stats/latex/wdbc_FirstDescent.tex}
-\input{stats/latex/wdbc_MaximumDescent.tex}
-\input{stats/latex/wdbc_SimAnnealing.tex}
-\input{stats/latex/wdbc_BasicTabuSearch.tex}
-\input{stats/latex/wdbc_TabuSearch.tex}
-\clearpage
+En cuanto a las búsquedas locales basadas en trayectorias simples, es notable cómo durante el entrenamiento la técnica del primer descenso obtiene mejores resultados (en el dataset Movement Libras la diferencia entre las medias es importante aunque hay mayor variabilidad en ambas técnicas), mientras que en la evaluación ambas consiguen resultados sin diferencias significativas. Esto se puede deber a que las técnicas son similares y, a partir de soluciones iniciales idénticas, llegan a máximos locales muy parecidos, que en test otorgan prácticamente los mismos resultados. Además, de los datos de tiempo observamos que la asunción previa de que la técnica del mayor descenso debía ser más lenta era incorrecta: ambas utilizan un período de tiempo similar para llegar a la solución.
 
-## Movement Libras
-\input{stats/latex/movement_libras_NoSelection.tex}
-\input{stats/latex/movement_libras_SeqForwardSelection.tex}
-\input{stats/latex/movement_libras_SeqBackwardSelection.tex}
-\input{stats/latex/movement_libras_FirstDescent.tex}
-\input{stats/latex/movement_libras_MaximumDescent.tex}
-\input{stats/latex/movement_libras_SimAnnealing.tex}
-\input{stats/latex/movement_libras_BasicTabuSearch.tex}
-\input{stats/latex/movement_libras_TabuSearch.tex}
-\clearpage
+Los resultados correspondientes al resto de técnicas basadas en búsqueda local tienen un aspecto clave en común, que consiste en que la mejora que consiguen para los datos de entrenamiento no se traslada de forma significativa a la evaluación con la partición de test. Esto se debe posiblemente a un sobreajuste de los algoritmos a los datos sobre los que aprenden. Una causa de que este sobreajuste se esté produciendo puede ser la definición de la función objetivo, que da mucha importancia al rendimiento de la clasificación sobre las instancias dadas, sin afinar en otros criterios que informen acerca de lo buena que es una característica independientemente de las relaciones de las instancias entre ellas. Tal vez una combinación de la función objetivo actual con una basada en Teoría de la Información nos aportaría esa doble perspectiva.
 
-## Arrhythmia
-\input{stats/latex/arrhythmia_NoSelection.tex}
-\input{stats/latex/arrhythmia_SeqForwardSelection.tex}
-\input{stats/latex/arrhythmia_SeqBackwardSelection.tex}
-\input{stats/latex/arrhythmia_FirstDescent.tex}
-\input{stats/latex/arrhythmia_MaximumDescent.tex}
-\input{stats/latex/arrhythmia_SimAnnealing.tex}
-\input{stats/latex/arrhythmia_BasicTabuSearch.tex}
-\input{stats/latex/arrhythmia_TabuSearch.tex}
-\clearpage
+Asimismo, es interesante el hecho de que la búsqueda tabú extendida no suponga una gran mejora o incluso empeore respecto de la básica, tanto en entrenamiento como en test. Este hecho se puede deber a que las 10 iteraciones que se permiten explorar sin mejorar la solución sean pocas y se debería esperar más o modificar dinámicamente ese parámetro, ya que se provocan muchas reinicializaciones consecutivas sin mejoras. También es posible que optimizando los parámetros de la búsqueda tabú básica se consiguieran mejoras más frecuentes, de forma que a la vez obtendríamos un mejor comportamiento de la extendida.
+
+Si comparamos con los algoritmos de referencia, el 3-NN sin selección y el SFS, la experimentación revela que hay mejoras importantes cuando se trabaja sobre los datos de entrenamiento, donde las búsquedas tabú y el enfriamiento simulado tienen ventaja sobre las demás (excepto en Arrhythmia contra SFS). Sin embargo, los resultados se nivelan más al trabajar con las particiones de test, por algunas de las causas comentadas anteriormente, principalmente el sobreajuste que producen los algoritmos con mejor rendimiento en el entrenamiento.
+
+Los tiempos de ejecución se han visto distorsionados por el hecho de que se han realizado algunas ejecuciones en paralelo, pero aún así se puede observar que las búsquedas tabú son notablemente más lentas que el resto de algoritmos, seguidos por el enfriamiento simulado, las técnicas *greedy*, las búsquedas basadas en trayectorias simples y por último la ejecución del 3-NN. Esto indica que el enfriamiento simulado ha producido más mejora por unidad de tiempo que las búsquedas tabú, lo cual puede deberse a que estas requieren de más decisiones que pueden afectar su rendimiento a la hora de ponerlas en práctica, y en este caso no estén bien afinadas.
+
+# Conclusiones
+
+Los datos recogidos y el análisis realizado nos muestran que es difícil decidir qué técnica ofrece los mejores resultados: si atendemos a los datos de entrenamiento y a los tiempos, podemos afirmar que el enfriamiento simulado es muy competitivo mientras que las búsquedas tabú necesitan más tiempo para llegar a soluciones ligeramente mejores. De los datos de test no podemos deducir nada definitivo ya que las diferencias son mucho menores y la variabilidad, mayor. Se necesitaría por tanto una optimización de parámetros de algunas de las técnicas o una modificación de la función objetivo para tratar de obtener mejoras más significativas.
 
 # Referencias
