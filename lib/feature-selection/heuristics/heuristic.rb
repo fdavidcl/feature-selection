@@ -1,4 +1,5 @@
 require "bitarray"
+require "knn_cv"
 
 # Additions to convert between arrays and bitarrays
 class Array
@@ -22,7 +23,7 @@ module FeatureSelection
       @rng = random
       @dataset = dataset
       @dataset.instances.each{|ins| ins.each{ |dat| puts "WARNING" if dat == Float::NAN}}
-      @classifier = CKNearest.new CONFIG.knn[:num_neighbors], @dataset, Random.new(@rng.seed)
+      @classifier = KnnCv::Classifier.new CONFIG.knn[:num_neighbors], @dataset, Random.new(@rng.seed)
       @evaluations = 0
     end
 

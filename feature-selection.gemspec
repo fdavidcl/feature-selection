@@ -13,7 +13,7 @@ Gem::Specification.new do |spec|
   spec.description   = %q{This gem implements several well-known metaheuristics applied to the problem of feature selection addressed at supervised learning.}
   spec.homepage      = "https://github.com/fdavidcl/feature-selection"
 
-  spec.licenses      = ["GPL-3.0+"]
+  spec.licenses      = ["MIT"]
 
   # Prevent pushing this gem to RubyGems.org by setting 'allowed_push_host', or
   # delete this section to allow pushing this gem to any host.
@@ -27,13 +27,12 @@ Gem::Specification.new do |spec|
   spec.bindir        = "exe"
   spec.executables   = spec.files.grep(%r{^exe/}) { |f| File.basename(f) }
   spec.require_paths = ["lib"]
-  spec.extensions   << "ext/c_knn/extconf.rb"
 
   spec.add_development_dependency "bundler", "~> 1.11"
   spec.add_development_dependency "rake", "~> 10.0"
   spec.add_development_dependency "minitest", "~> 5.0"
   spec.add_development_dependency "ruby-prof"
-  spec.add_development_dependency "rake-compiler"
 
   spec.add_dependency "ingramj-bitarray"
+  spec.add_dependency "knn_cv"
 end

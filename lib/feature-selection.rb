@@ -13,6 +13,5 @@ module FeatureSelection
 end
 
 require "feature-selection/version"
-require "feature-selection/classifiers"
 require "feature-selection/heuristics"
 require "feature-selection/evaluator"
