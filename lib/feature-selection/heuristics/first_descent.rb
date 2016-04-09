@@ -1,10 +1,10 @@
 require_relative "monotonic_search"
 
 module FeatureSelection
-  class FirstDescent < MonotonicSearch
+  class FirstDescent < LocalSearch
     private
     def select_next
-      neighborhood.detect do |attempt, fitness|
+      neighborhood.lazy.take(@max_evaluations - @evaluations).detect do |attempt, fitness|
         fitness > @fitness
       end
     end

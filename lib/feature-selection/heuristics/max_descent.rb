@@ -1,10 +1,10 @@
 require_relative "monotonic_search"
 
 module FeatureSelection
-  class MaximumDescent < MonotonicSearch
+  class MaximumDescent < LocalSearch
     private
     def select_next
-      neighbor, fitness = neighborhood.max_by &:last
+      neighbor, fitness = neighborhood.lazy.take(@max_evaluations - @evaluations).max_by &:last
       [neighbor, fitness] if !neighbor.nil? && fitness > @fitness # returns nil otherwise
     end
   end
