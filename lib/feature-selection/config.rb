@@ -26,6 +26,17 @@ module FeatureSelection
           tabu_search: {
             num_neighbors: 30,
             initial_size_factor: 1.0/3
+          },
+          multistart: {
+            initial: 25
+          },
+          grasp: {
+            initial: 25,
+            alpha: 0.3
+          },
+          ils: {
+            mutated_count: 24,
+            mutation_ratio: 0.1
           }
         }.each do |key, value|
           store[key] = value
