@@ -1,5 +1,4 @@
-require "bitarray"
-require_relative "monotonic_search"
+require_relative "heuristic"
 
 module FeatureSelection
   class LocalSearch < Heuristic

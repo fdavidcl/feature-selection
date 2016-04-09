@@ -1,4 +1,4 @@
-require_relative "monotonic_search"
+require_relative "local_search"
 
 module FeatureSelection
   class FirstDescent < LocalSearch
