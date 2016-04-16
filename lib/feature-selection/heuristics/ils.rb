@@ -8,6 +8,7 @@ module FeatureSelection
       @switched_features = CONFIG.ils[:mutation_ratio] * @solution.length
     end
 
+    private
     def outer_loop
       basic_local_search
       CONFIG.ils[:mutated_count].times do

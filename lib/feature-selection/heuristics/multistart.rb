@@ -2,6 +2,7 @@ require_relative "first_descent"
 
 module FeatureSelection
   class BasicMultistart < FirstDescent
+    private
     def outer_loop
       CONFIG.multistart[:initial].times do
         # Set current solution as a new random solution

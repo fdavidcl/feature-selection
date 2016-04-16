@@ -9,6 +9,7 @@ module FeatureSelection
       @initial_generator = RandomizedSFS.new @dataset, debug: @debug, random: @rng
     end
 
+    private
     def outer_loop
       CONFIG.grasp[:initial].times do
         self.solution = @initial_generator.run
