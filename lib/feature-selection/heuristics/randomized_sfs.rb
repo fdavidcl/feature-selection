@@ -6,8 +6,8 @@ module FeatureSelection
     def select_next
       ranking = neighborhood.sort_by do |_, fitness|
         fitness
-      end.reverse!
-      threshold = ranking.first[2] + CONFIG.grasp[:alpha] * (ranking.first[2] - ranking.last[2])
+      end
+      threshold = ranking.last[2] + CONFIG.grasp[:alpha] * (ranking.last[2] - ranking.first[2])
 
       ranking.select! do |_, fitness|
         fitness > threshold
