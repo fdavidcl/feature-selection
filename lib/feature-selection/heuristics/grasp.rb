@@ -1,3 +1,4 @@
+require_relative "first_descent"
 require_relative "randomized_sfs"
 
 module FeatureSelection
