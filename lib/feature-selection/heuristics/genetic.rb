@@ -18,5 +18,9 @@ module FeatureSelection
         pair[0][0 ... start] + pair[1][start ... stop] + pair[0][stop ... len]
       end
     end
+
+    def mutate solution
+      solution.toggle_bit @rng.rand(0 ... solution.length)
+    end
   end
 end
