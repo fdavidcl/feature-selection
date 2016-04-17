@@ -29,9 +29,23 @@ module FeatureSelection
 
     attr_reader :dataset, :classifier
 
+    private
     def fitness_for solution
       @evaluations += 1
       @classifier.fitness_for solution
+    end
+
+    def random_solution
+      size = @dataset.input_count
+      BitArray.new(size).tap do |solution|
+        # Method 1: Randomly set each bit to 0 or 1
+        (0..size - 1).each do |i|
+          solution.set_bit(i) if @rng.rand(2) == 1
+        end
+
+        # Method 2: Set a random sample of bits
+        # (0 ... size).to_a.sample(@rng.rand(size), random: @rng).each{ |i| solution.set_bit i }
+      end
     end
   end
 end
