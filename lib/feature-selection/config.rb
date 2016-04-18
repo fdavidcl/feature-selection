@@ -37,6 +37,17 @@ module FeatureSelection
           ils: {
             mutated_count: 24,
             mutation_ratio: 0.1
+          },
+          genetic: {
+            size: 30,
+            generational: {
+              crossover_p: 0.7,
+              mutation_p: 0.001
+            },
+            stationary: {
+              crossover_p: 1,
+              mutation_p: 0.001
+            }
           }
         }.each do |key, value|
           store[key] = value
