@@ -16,7 +16,7 @@ ask() {
         fi
 
         # Ask the question - use /dev/tty in case stdin is redirected from somewhere else
-        echo -en "\e[1m\e[33m$1\e[0m "
+        printf "\e[1m\e[33m$1\e[0m "
         read -p "[$prompt] " REPLY </dev/tty
 
         # Default?
@@ -34,7 +34,7 @@ ask() {
 }
 
 inform() {
-  echo -e "\e[1m\e[36m$@\e[0m"
+  printf "\e[1m\e[36m$@\e[0m\n"
   sleep 1
 }
 
@@ -70,8 +70,6 @@ configure_ruby() {
     )
     inform "Installing dependencies..."
     gem install bundler --conservative && bundle install
-    inform "Compiling native extensions..."
-    rake compile
     return 0
   ) || (
     inform "Couldn't find a Ruby installation"
