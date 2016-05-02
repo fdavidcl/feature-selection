@@ -23,7 +23,7 @@ module FeatureSelection
       @rng = random
       @dataset = dataset
       @dataset.instances.each{|ins| ins.each{ |dat| puts "WARNING" if dat == Float::NAN}}
-      @classifier = KnnCv::Classifier.new CONFIG.knn[:num_neighbors], @dataset, Random.new(@rng.seed)
+      @classifier = KnnCv::Classifier.new CONFIG.knn[:num_neighbors], @dataset.instances, @dataset.classes, @dataset.numeric_attrs, Random.new(@rng.seed)
       @evaluations = 0
     end
 

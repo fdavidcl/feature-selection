@@ -34,5 +34,5 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "ruby-prof"
 
   spec.add_dependency "ingramj-bitarray"
-  spec.add_dependency "knn_cv"
+  spec.add_dependency "knn_cv", "~> 0.2"
 end
