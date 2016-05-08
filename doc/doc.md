@@ -1,6 +1,6 @@
 ---
-title: "Práctica 1.b: Búsquedas por Trayectorias (Selección de características)"
-subtitle: "Búsquedas locales básicas, Enfriamiento simulado, Búsqueda tabú y Búsqueda tabú extendida"
+title: "Prácticas de Metaheurísticas"
+subtitle: "Selección de Características"
 author: "Francisco David Charte Luque (77368864S) <<fdavidcl@correo.ugr.es>>"
 date: "Grupo de prácticas 2 (Jueves 17:30 - 19:30)"
 toc: yes
@@ -90,11 +90,13 @@ Los algoritmos utilizados requieren de generadores de números aleatorios con su
 ### Reproducibilidad
 Los resultados obtenidos son reproducibles por otros usuarios ya que se ha fijado una semilla aleatoria por defecto a 1, que se utiliza para generar las semillas aleatorias que se usarán en las distintas ejecuciones (de esta forma siempre se generan las mismas semillas).
 
-Además, las tablas y gráficos obtenidos resultan de la ejecución del guion `stats/stats.R` que se incluye en el código fuente, a partir de los archivos CSV que se obtengan como salida del programa en `out/` y se copien en el directorio `stats/csv/`. Este mismo documento se puede generar al completo mediante el comando `rake doc`.
+Además, las tablas y gráficos obtenidos resultan de la ejecución del guion `stats/stats.R` que se incluye en el código fuente, a partir de los archivos CSV que se obtengan como salida del programa en `out/` y se copien en el directorio `stats/csv/`. Este mismo documento se puede generar al completo mediante el comando `rake doc` (son necesarios el intérprete de R y el programa *pandoc* para ello).
 
 # Algoritmos empleados
 
-## Búsquedas locales simples
+## Práctica 1.b: Búsquedas por Trayectorias
+
+### Búsquedas locales simples
 
 Se ha implementado la búsqueda local de primer descenso y, adicionalmente, la búsqueda local de mayor descenso, con el objetivo de analizar si el tiempo que requiere buscar en el vecindario completo se ve compensado por una mejora en los resultados de la técnica. A continuación se describe el algoritmo base de una búsqueda por trayectorias simples y se concreta la función *siguiente-solucion()* en los siguientes algoritmos:
 
@@ -139,7 +141,7 @@ Se ha implementado la búsqueda local de primer descenso y, adicionalmente, la b
 \end{algorithmic}
 \end{algorithm}
 
-## Enfriamiento simulado
+### Enfriamiento simulado
 
 Para el enfriamiento simulado, se calcula la temperatura inicial en función de la calidad de la solución aleatoria inicial, siguiendo la siguiente fórmula:
 $$T_{\mathrm{inicial}} = \frac{\mu\times \mathrm{fitness}(S_{\mathrm{inicial}})}{-\log(\phi)},$$
@@ -199,7 +201,7 @@ El algoritmo \ref{simann} describe el proceso de enfriamiento del algoritmo mien
 \end{algorithm}
 
 
-## Búsqueda tabú
+### Búsqueda tabú
 
 Para la búsqueda tabú, se ha desarrollado el algoritmo de una iteración usando la memoria a corto plazo (algoritmo \ref{tabu-una}), que sirve tanto para la búsqueda tabú básica (algoritmo \ref{tabu-corto}) como para la extendida (algoritmo \ref{tabu-largo}).
 
@@ -238,7 +240,7 @@ Para la búsqueda tabú, se ha desarrollado el algoritmo de una iteración usand
 \end{algorithm}
 
 
-## Búsqueda tabú extendida
+### Búsqueda tabú extendida
 
 La búsqueda tabú con memoria a largo plazo realiza iteraciones de la anterior de forma controlada, es decir, reinicializa la búsqueda en otro lugar del espacio de soluciones cuando detecta que la búsqueda a corto plazo lleva cierto tiempo sin producir mejora. Dicha reinicialización se escoge aleatoriamente de entre una solución diversa (atendiendo a la memoria de frecuencias que se actualiza al asignar una solución), una solución aleatoria y la mejor solución encontrada.  
 
@@ -265,22 +267,27 @@ La búsqueda tabú con memoria a largo plazo realiza iteraciones de la anterior 
 \end{algorithmic}
 \end{algorithm}
 
+## Práctica 2.b: Búsquedas Multiarranque
 
-<!--# Algoritmo de comparación (?)-->
+## Práctica 3.b: Algoritmos Genéticos
 
-# Implementación de la práctica
+# Implementación de las prácticas
 
 La implementación de los algoritmos se ha realizado en el lenguaje Ruby, con la intención de aprovechar su expresividad a la hora de iterar de distintas formas por vectores y matrices [@enumerators], entre otras ventajas.
 
 ## Arquitectura
 
-La aplicación tiene la estructura común de una librería Ruby (o *gema*), con los códigos fuente en el directorio `lib/` y los útiles para su ejecución en el directorio `bin/`. El algoritmo kNN está implementado en C[^knnclass] en el directorio `ext/c_knn/`, para lo cual se hace uso de la API para C de Ruby, documentada en [@anselm]. Además, las dependencias y otros metadatos están especificados en el archivo `feature-selection.gemspec` de forma que la gema sea fácil de configurar.
+La aplicación tiene la estructura común de una librería Ruby (o *gema*), con los códigos fuente en el directorio `lib/` y los útiles para su ejecución en el directorio `bin/`. El algoritmo kNN está implementado en C[^knnclass] en la gema adicional *knn_cv* [@myknncv], para lo cual se hace uso de la API para C de Ruby, documentada en [@anselm]. Además, las dependencias y otros metadatos están especificados en el archivo `feature-selection.gemspec` de forma que la gema sea fácil de configurar.
 
 [^knnclass]: La implementación de kNN se ha adaptado del código C del paquete `class` [@rclass] para R.
 
 En lo referente a la implementación, se ha desarrollado una sencilla jerarquía de clases que permitan facilitar el desarrollo y la experimentación. Las clases base son `Heuristic`, de la que derivan todas las técnicas implementadas; `Classifier`, de la que deriva el clasificador kNN (y que permitiría implementar otros clasificadores adicionales); `Evaluator`, que se encarga de la evaluación por validación cruzada de las heurísticas, y `Dataset`, que encapsula los conjuntos de datos utilizados. Adicionalmente se utilizan las clases auxiliares `Config` y `ARFFFile`.
 
-Para las técnicas basadas en trayectorias simples y las basadas en búsqueda local se ha desarrollado una base común en las clases `MonotonicSearch` y `LocalSearch`. La primera implementa todo lo necesario para una búsqueda local de ascensión de pendientes, tanto el bucle externo como la generación del vecindario. Únicamente la extracción de la próxima solución del vecindario se deja a las clases `FirstDescent` y `MaximumDescent`. Además, `LocalSearch` añade la funcionalidad necesaria para llevar un registro de la mejor solución global y sirve como base para el enfriamiento simulado (`SimAnnealing`) y las búsquedas tabú (`BasicTabuSearch`, `TabuSearch`).
+Para las técnicas basadas en trayectorias simples y las basadas en búsqueda local se ha desarrollado una base común en la clase `LocalSearch`. En ella se implementa todo lo necesario para una búsqueda local de descenso de pendientes, tanto el bucle externo como la generación del vecindario, y lleva un registro de la mejor solución global. Así, únicamente la extracción de la próxima solución del vecindario se deja a las clases `FirstDescent` y `MaximumDescent`, y sirve como base para el enfriamiento simulado (`SimAnnealing`) y las búsquedas tabú (`BasicTabuSearch`, `TabuSearch`).
+
+Las búsquedas multiarranque toman como base la búsqueda local de primer descenso, por lo que se han implementado como clases que heredan de `FirstDescent`.
+
+Por otro lado, los algoritmos genéticos están implementados en las clases `GenerationalGenetic` y `StationaryGenetic`, teniendo ambas una base común en la clase `Genetic`.
 
 ## Instalación y configuración
 
@@ -292,7 +299,7 @@ Es necesario tener previamente instalados los paquetes básicos de desarrollo (p
 
 ### Manual (todos los sistemas)
 
-Será necesario contar con una versión reciente de Ruby (recomendablemente la 2.3.0) y el paquete de desarrollo de Ruby (para las dependencias con extensiones nativas en C). Instalaremos manualmente la gema *bundler* mediante `gem install bundler`. Cuando se haya instalado, ejecutamos `bundle` para instalar el resto de dependencias. Tras esto, compilamos el código C mediante `rake compile` y el programa ya estará listo para usarse.
+Será necesario contar con una versión reciente de Ruby (recomendablemente la 2.3.0) y el paquete de desarrollo de Ruby (para las dependencias con extensiones nativas en C). Instalaremos manualmente la gema *bundler* mediante `gem install bundler`. Cuando se haya instalado, ejecutamos `bundle` para instalar el resto de dependencias. Tras esto, el programa ya estará listo para usarse.
 
 ### Archivo de configuración
 
@@ -328,7 +335,7 @@ Los parámetros se han establecido de la siguiente forma:
     * Número de vecinos generados: 30
     * Tamaño inicial de la lista tabú: $\frac 1 3$
 
-## Resumen de resultados y gráficos obtenidos
+## Práctica 1.b: Resultados y análisis
 
 ### Tablas de resultados por heurística
 
@@ -369,7 +376,7 @@ La tabla \ref{global} presenta las medias de los resultados obtenidos para cada 
 
 \includegraphics[width=\textwidth]{stats/img/boxplot_test_arrhythmia.png}
 
-## Análisis de resultados
+### Análisis de resultados
 
 De los gráficos anteriores se deduce que la tendencia general de los algoritmos es similar a lo largo de los distintos conjuntos de datos. La única excepción puede ser el buen resultado de la técnica *greedy* Sequential Forward Selection sobre el dataset Arrhythmia, que no se refleja en el resto de datasets.
 
@@ -385,8 +392,12 @@ Si comparamos con los algoritmos de referencia, el 3-NN sin selección y el SFS,
 
 Los tiempos de ejecución se han visto distorsionados por el hecho de que se han realizado algunas ejecuciones en paralelo, pero aún así se puede observar que las búsquedas tabú son notablemente más lentas que el resto de algoritmos, seguidos por el enfriamiento simulado, las técnicas *greedy*, las búsquedas basadas en trayectorias simples y por último la ejecución del 3-NN. Esto indica que el enfriamiento simulado ha producido más mejora por unidad de tiempo que las búsquedas tabú, lo cual puede deberse a que estas requieren de más decisiones que pueden afectar su rendimiento a la hora de ponerlas en práctica, y en este caso no estén bien afinadas.
 
-# Conclusiones
+### Conclusiones
 
 Los datos recogidos y el análisis realizado nos muestran que es difícil decidir qué técnica ofrece los mejores resultados: si atendemos a los datos de entrenamiento y a los tiempos, podemos afirmar que el enfriamiento simulado es muy competitivo mientras que las búsquedas tabú necesitan más tiempo para llegar a soluciones ligeramente mejores. De los datos de test no podemos deducir nada definitivo ya que las diferencias son mucho menores y la variabilidad, mayor. Se necesitaría por tanto una optimización de parámetros de algunas de las técnicas o una modificación de la función objetivo para tratar de obtener mejoras más significativas.
+
+## Práctica 2.b: Resultados y análisis
+
+## Práctica 3.b: Resultados y análisis
 
 # Referencias
