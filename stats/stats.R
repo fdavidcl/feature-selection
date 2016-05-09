@@ -12,17 +12,29 @@ datasets <- c(
 )
 d_names <- c("Arrhythmia", "Movement Libras", "WDBC")
 heuristics <- c(
+  "BasicMultistart",
   "BasicTabuSearch",
   "FirstDescent",
+  "GenerationalGenetic",
+  "Grasp",
+  "IterativeLocalSearch",
   "MaximumDescent",
   "NoSelection",
   "SeqBackwardSelection",
   "SeqForwardSelection",
   "SimAnnealing",
+  "StationaryGenetic",
   "TabuSearch"
 )
-h_order <- c(4, 6, 5, 2, 3, 7, 1, 8)
+h_order <- c(8, 10, 9, 3, 7, 11, 2, 13, 1, 5, 6, 4, 12)
+practicas <- list(
+  c(8, 10, 9, 3, 7, 11, 2, 13),
+  c(8, 10, 9, 1, 5, 6),
+  c(8, 10, 9, 4, 12)
+)
 ordered_heuristics <- heuristics[h_order]
+l <- length(heuristics)
+
 result_names <- lapply(1:length(results), function(i) list(dataset = datasets[ceiling(i/8)], heuristic = heuristics[((i - 1) %% 8) + 1]))
 row_names <- c("Partición 1-1", "Partición 1-2", "Partición 2-1", "Partición 2-2", "Partición 3-1", "Partición 3-2", "Partición 4-1", "Partición 4-2", "Partición 5-1", "Partición 5-2", "Media")
 col_names <- c("%train", "%test", "%red", "time")
@@ -38,7 +50,7 @@ for (r in 1:length(results)) {
 #############################################################
 # Tablas
 for (h in 1:length(heuristics)) {
-  join <- data.frame(wdbc = results[[16 + h_order[h]]], libras = results[[8 + h_order[h]]], arrhythmia = results[[h_order[h]]])
+  join <- data.frame(wdbc = results[[2*l + h_order[h]]], libras = results[[l + h_order[h]]], arrhythmia = results[[h_order[h]]])
   join <- rbind(join, sapply(join, mean))
   rownames(join) <- row_names
   names(join) <- col_names
@@ -55,7 +67,7 @@ for (h in 1:length(heuristics)) {
 # Resultados globales
 two_decs <- function(x) format(round(x, 2), nsmall=2)
 means <- t(data.frame(lapply(1:length(heuristics), function(h) {
-  join <- data.frame(wdbc = results[[16 + h_order[h]]], libras = results[[8 + h_order[h]]], arrhythmia = results[[h_order[h]]])
+  join <- data.frame(wdbc = results[[2*l + h_order[h]]], libras = results[[l + h_order[h]]], arrhythmia = results[[h_order[h]]])
   paste(two_decs(sapply(join, mean)), "$\\pm$", two_decs(sapply(join, sd)))
 })))
 rownames(means) <- ordered_heuristics
@@ -72,11 +84,13 @@ sink(NULL)
 # Boxplots
 for (m in measures) {
   for (d in 1:length(datasets)) {
-    initial <- length(heuristics) * (d-1)
-    lists <- lapply(results[initial + h_order], function(r) r[[m]])
-    png(paste0("img/boxplot_", m, "_", datasets[d], ".png"), width = 1300, height = 400)
-    boxplot(lists, names = ordered_heuristics)
-    title(datasets[d], sub = m)
-    dev.off()
+    initial <- l * (d-1)
+    for (p in 1:length(practicas)) {
+      lists <- lapply(results[initial + practicas[[p]]], function(r) r[[m]])
+      png(paste0("img/boxplot_", m, "_", datasets[d], "_p", p, ".png"), width = 1300, height = 400)
+      boxplot(lists, names = heuristics[practicas[[p]]])
+      title(datasets[d], sub = m)
+      dev.off()
+    }
   }
 }
