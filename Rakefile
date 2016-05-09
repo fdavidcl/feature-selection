@@ -11,11 +11,12 @@ task :default => :spec
 
 task :doc => 'doc/doc.pdf'
 
-file 'doc/doc.pdf' => ['doc/doc.md', 'stats/stats.R', 'doc/ieee.csl', 'doc/references.bib'] do 
-|t|
+task :graphics => ['stats/stats.R', 'stats/csv/'] do |t|
   puts "Generating tables and graphics..."
   `cd stats; ./stats.R; cd ..`
+end
+
+file 'doc/doc.pdf' => ['doc/doc.md', :graphics, 'doc/ieee.csl', 'doc/references.bib'] do |t|
   puts "Compiling #{t.prerequisites[0]}->#{t.name} with pandoc..."
   `pandoc #{t.prerequisites[0]} -o #{t.name} --filter pandoc-eqnos --filter pandoc-citeproc --latex-engine=xelatex`
 end
-
