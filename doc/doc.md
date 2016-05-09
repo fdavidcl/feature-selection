@@ -6,7 +6,7 @@ date: "Grupo de prácticas 2 (Jueves 17:30 - 19:30)"
 toc: yes
 lang: spanish
 fontsize: 11pt
-geometry: "a4paper, top=2.5cm, bottom=2.5cm, left=3cm, right=3cm"
+geometry: "a4paper, top=2.2cm, bottom=2.2cm, left=2.6cm, right=2.6cm"
 bibliography: doc/references.bib
 csl: doc/ieee.csl
 numbersections: yes
@@ -269,7 +269,101 @@ La búsqueda tabú con memoria a largo plazo realiza iteraciones de la anterior 
 
 ## Práctica 2.b: Búsquedas Multiarranque
 
+### Búsqueda multiarranque básica
+
+\begin{algorithm}
+\caption{Búsqueda multiarranque básica con $r$ reinicializaciones}
+\label{bmb}
+\begin{algorithmic}
+  \FOR{$r$ \textbf{times}}
+    \STATE{solución-actual $\gets$ solución-aleatoria()}
+    \STATE{solución-actual $\gets$ búsqueda-local(inicial: solución-actual)}
+    \IF{fitness(solución-actual) > fitness(solución-mejor)}
+      \STATE{solución-mejor $\gets$ solución-actual}
+    \ENDIF
+  \ENDFOR
+  \RETURN{solución-mejor}
+\end{algorithmic}
+\end{algorithm}
+
+### GRASP
+
+\begin{algorithm}
+\caption{Algoritmo GRASP con $r$ iteraciones}
+\label{grasp}
+\begin{algorithmic}
+  \FOR{$r$ \textbf{times}}
+    \STATE{solución-actual $\gets$ solución-voraz-aleatorizada()}
+    \STATE{solución-actual $\gets$ búsqueda-local(inicial: solución-actual)}
+    \IF{fitness(solución-actual) > fitness(solución-mejor)}
+      \STATE{solución-mejor $\gets$ solución-actual}
+    \ENDIF
+  \ENDFOR
+  \RETURN{solución-mejor}
+\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}
+\caption{Procedimiento SFS aleatorizado}
+\label{randomized-sfs}
+\begin{algorithmic}
+  \STATE{mejora $\gets$ \textbf{true}}
+  \WHILE{mejora}
+    \STATE{mejor $\gets$ max(fitness(vecindario))}
+    \STATE{peor $\gets$ min(fitness(vecindario))}
+    \STATE{umbral $\gets$ mejor - $\alpha$(mejor - peor)}
+    \STATE{candidatas $\gets$ [ ]}
+    \FORALL{c \textbf{en} vecindario}
+      \IF{fitness(c) > umbral}
+        \STATE{candidatas << c}
+      \ENDIF
+    \ENDFOR
+    \STATE{solución-nueva $\gets$ candidatas[aleatorio(0 ... longitud(candidatas))]}
+    \IF{fitness(solución-nueva) > fitness(solución-actual)}
+      \STATE{solución-actual $\gets$ solución-nueva}
+    \ELSE
+      \STATE{mejora $\gets$ \textbf{false}}
+    \ENDIF
+  \ENDWHILE
+  \RETURN{solución-actual}
+\end{algorithmic}
+\end{algorithm}
+
+### *Iterative Local Search*
+
+\begin{algorithm}
+\caption{\textit{Iterative Local Search} para $r$ iteraciones}
+\label{ils}
+\begin{algorithmic}
+  \STATE{solución-actual $\gets$ solución-aleatoria()}
+  \STATE{solución-actual $\gets$ búsqueda-local(inicial: solución-actual)}
+  \FOR{$r$ \textbf{times}}
+    \STATE{solución-actual $\gets$ mutar(solución-actual)}
+    \STATE{solución-actual $\gets$ búsqueda-local(inicial: solución-actual)}
+    \IF{fitness(solución-actual) > fitness(solución-mejor)}
+      \STATE{solución-mejor $\gets$ solución-actual}
+    \ENDIF
+  \ENDFOR
+  \RETURN{solución-mejor}
+\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}
+\caption{Operador de mutación con probabilidad $s$ de \textit{Iterative Local Search}}
+\label{ils-mutation}
+\begin{algorithmic}
+  \FOR{bit \textbf{en} muestrear([0 ... longitud(solución)], $s$)}
+    \STATE{solución $\gets$ conmutar(solución, bit)}
+  \ENDFOR
+  \RETURN{solución}
+\end{algorithmic}
+\end{algorithm}
+
 ## Práctica 3.b: Algoritmos Genéticos
+
+### Algoritmo Genético Generacional
+
+### Algoritmo Genético Estacionario
 
 # Implementación de las prácticas
 
@@ -335,46 +429,84 @@ Los parámetros se han establecido de la siguiente forma:
     * Número de vecinos generados: 30
     * Tamaño inicial de la lista tabú: $\frac 1 3$
 
+## Algoritmos para comparación: *Sequential Forward/Backward Selection*
+
+\begin{algorithm}
+\caption{Sequential Forward/Backward Selection}
+\label{randomized-sfs}
+\begin{algorithmic}
+  \STATE{solución $\gets$ [ ]}
+  \STATE{restantes $\gets$ [0 ... num-características]}
+  \STATE{mejora $\gets$ \textbf{true}}
+  \WHILE{mejora}
+    \STATE{candidatas $\gets$ [ ]}
+    \FOR{característica \textbf{en} restantes}
+      \IF{algoritmo-forward}
+        \STATE{candidatas << solución $\cup$ característica}
+      \ELSE
+        \STATE{candidatas << restantes $\setminus$ característica}
+      \ENDIF
+    \ENDFOR
+    \STATE{solución-nueva $\gets$ arg-max(candidatas, fitness)}
+    \IF{fitness(solución-nueva) > fitness(solución)}
+      \STATE{restantes $\gets$ restantes $\setminus$ (solución-nueva $\setminus$ solución)}
+      \STATE{solución $\gets$ solución-nueva}
+    \ELSE
+      \STATE{mejora $\gets$ \textbf{false}}
+    \ENDIF
+  \ENDWHILE
+  \IF{algoritmo-forward}
+    \RETURN{solución}
+  \ELSE
+    \RETURN{restantes}
+  \ENDIF
+\end{algorithmic}
+\end{algorithm}
+
+\begin{landscape}
+\subsection{Resultados globales}
+La tabla \ref{global} presenta las medias y desviaciones de los resultados obtenidos para todas las heurísticas. La tabla \ref{NoSelection} recoge los resultados del algoritmo 3-NN sin selección de características. Las tablas \ref{SeqForwardSelection} y \ref{SeqBackwardSelection} desarrollan los resultados de los algoritmos \textit{greedy} que sirven como punto de partida para comparar.
+
+\input{stats/latex/global.tex}
+
+\input{stats/latex/NoSelection.tex}
+\input{stats/latex/SeqForwardSelection.tex}
+\input{stats/latex/SeqBackwardSelection.tex}
+\clearpage
+\end{landscape}
+
 ## Práctica 1.b: Resultados y análisis
 
 ### Tablas de resultados por heurística
 
 **Nota**: Se realizaron los paquetes de 10 ejecuciones para cada heurística y dataset en paralelo, por lo que los tiempos de ejecución se ven afectados en que las primeras ejecuciones son en general más lentas que las últimas (ya que conforme se van completando ejecuciones se libera tiempo de CPU para las heurísticas que requieren más tiempo). En una ejecución secuencial, los tiempos serían más similares a los últimos de cada tabla.
 
-Las tablas que se incluyen en las páginas siguientes recogen la información obtenida a partir de las ejecuciones de cada heurística sobre todos los datasets. La tabla \ref{NoSelection} recoge los resultados del algoritmo 3-NN sin selección de características. Las tablas \ref{SeqForwardSelection} y \ref{SeqBackwardSelection} corresponden a los algoritmos *greedy* que sirven como punto de partida para comparar; las \ref{FirstDescent} y \ref{MaximumDescent} muestran los datos de las búsquedas locales con trayectorias simples, la tabla \ref{SimAnnealing} corresponde al enfriamiento simulado y las dos últimas, \ref{BasicTabuSearch} y \ref{TabuSearch}, a las búsquedas tabú básica y extendida respectivamente.
+Las tablas que se incluyen en las páginas siguientes recogen la información obtenida a partir de las ejecuciones de cada heurística sobre todos los datasets. Las tablas \ref{FirstDescent} y \ref{MaximumDescent} muestran los datos de las búsquedas locales con trayectorias simples, la tabla \ref{SimAnnealing} corresponde al enfriamiento simulado y las dos últimas, \ref{BasicTabuSearch} y \ref{TabuSearch}, a las búsquedas tabú básica y extendida respectivamente.
 
 \begin{landscape}
-\input{stats/latex/NoSelection.tex}
-\input{stats/latex/SeqForwardSelection.tex}
-\input{stats/latex/SeqBackwardSelection.tex}
 \input{stats/latex/FirstDescent.tex}
 \input{stats/latex/MaximumDescent.tex}
 \input{stats/latex/SimAnnealing.tex}
 \input{stats/latex/BasicTabuSearch.tex}
 \input{stats/latex/TabuSearch.tex}
 \clearpage
-
-\subsubsection{Resultados globales}
-La tabla \ref{global} presenta las medias de los resultados obtenidos para cada heurística:
-\input{stats/latex/global.tex}
-\clearpage
 \end{landscape}
 
 ### Rendimiento sobre los datos de entrenamiento
 
-\includegraphics[width=\textwidth]{stats/img/boxplot_training_wdbc.png}
+\includegraphics[width=\textwidth]{stats/img/boxplot_training_wdbc_p1.png}
 
-\includegraphics[width=\textwidth]{stats/img/boxplot_training_movement_libras.png}
+\includegraphics[width=\textwidth]{stats/img/boxplot_training_movement_libras_p1.png}
 
-\includegraphics[width=\textwidth]{stats/img/boxplot_training_arrhythmia.png}
+\includegraphics[width=\textwidth]{stats/img/boxplot_training_arrhythmia_p1.png}
 
 ### Rendimiento sobre los datos de test
 
-\includegraphics[width=\textwidth]{stats/img/boxplot_test_wdbc.png}
+\includegraphics[width=\textwidth]{stats/img/boxplot_test_wdbc_p1.png}
 
-\includegraphics[width=\textwidth]{stats/img/boxplot_test_movement_libras.png}
+\includegraphics[width=\textwidth]{stats/img/boxplot_test_movement_libras_p1.png}
 
-\includegraphics[width=\textwidth]{stats/img/boxplot_test_arrhythmia.png}
+\includegraphics[width=\textwidth]{stats/img/boxplot_test_arrhythmia_p1.png}
 
 ### Análisis de resultados
 
@@ -398,6 +530,64 @@ Los datos recogidos y el análisis realizado nos muestran que es difícil decidi
 
 ## Práctica 2.b: Resultados y análisis
 
+### Tablas de resultados por heurística
+
+\begin{landscape}
+\input{stats/latex/BasicMultistart.tex}
+\input{stats/latex/Grasp.tex}
+\input{stats/latex/IterativeLocalSearch.tex}
+\clearpage
+\end{landscape}
+
+### Rendimiento sobre los datos de entrenamiento
+
+\includegraphics[width=\textwidth]{stats/img/boxplot_training_wdbc_p2.png}
+
+\includegraphics[width=\textwidth]{stats/img/boxplot_training_movement_libras_p2.png}
+
+\includegraphics[width=\textwidth]{stats/img/boxplot_training_arrhythmia_p2.png}
+
+### Rendimiento sobre los datos de test
+
+\includegraphics[width=\textwidth]{stats/img/boxplot_test_wdbc_p2.png}
+
+\includegraphics[width=\textwidth]{stats/img/boxplot_test_movement_libras_p2.png}
+
+\includegraphics[width=\textwidth]{stats/img/boxplot_test_arrhythmia_p2.png}
+
+### Análisis de resultados
+
+### Conclusiones
+
+
 ## Práctica 3.b: Resultados y análisis
+
+### Tablas de resultados por heurística
+
+\begin{landscape}
+\input{stats/latex/GenerationalGenetic.tex}
+\input{stats/latex/StationaryGenetic.tex}
+\clearpage
+\end{landscape}
+
+### Rendimiento sobre los datos de entrenamiento
+
+\includegraphics[width=\textwidth]{stats/img/boxplot_training_wdbc_p3.png}
+
+\includegraphics[width=\textwidth]{stats/img/boxplot_training_movement_libras_p3.png}
+
+\includegraphics[width=\textwidth]{stats/img/boxplot_training_arrhythmia_p3.png}
+
+### Rendimiento sobre los datos de test
+
+\includegraphics[width=\textwidth]{stats/img/boxplot_test_wdbc_p3.png}
+
+\includegraphics[width=\textwidth]{stats/img/boxplot_test_movement_libras_p3.png}
+
+\includegraphics[width=\textwidth]{stats/img/boxplot_test_arrhythmia_p3.png}
+
+### Análisis de resultados
+
+### Conclusiones
 
 # Referencias
