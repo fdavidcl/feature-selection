@@ -4,16 +4,12 @@ module FeatureSelection
   class RandomizedSFS < SeqForwardSelection
     private
     def select_next
-      ranking = neighborhood.sort_by do |_, fitness|
-        fitness
-      end
-      threshold = ranking.last[2] + CONFIG.grasp[:alpha] * (ranking.last[2] - ranking.first[2])
+      fitness_list = neighborhood.map{ |_, fitness| fitness }
+      threshold = fitness_list.max - CONFIG.grasp[:alpha] * (fitness_list.max - fitness_list.min)
 
-      ranking.select! do |_, fitness|
+      neighborhood.select do |_, fitness|
         fitness > threshold
-      end
-
-      ranking.sample random: @rng
+      end.sample random: @rng
     end
   end
 end
