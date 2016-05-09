@@ -8,8 +8,6 @@ module FeatureSelection
         # Set current solution as a new random solution
         initial = random_solution
         self.solution = [initial, fitness_for(initial)]
-        # Reset evaluation count
-        @evaluations = 0
         # Run local search here
         basic_local_search
       end
