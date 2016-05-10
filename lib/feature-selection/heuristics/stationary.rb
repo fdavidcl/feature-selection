@@ -4,38 +4,41 @@ module FeatureSelection
   class StationaryGenetic < Genetic
     private
     def generation
-      best_child, worst_child = evolution
-      chromosome_len = best_child.length
+      # Tournament select 2 parents, get children by the crossover operator
+      first, second = crossover *(selection 2)
 
-      (0 ... chromosome_len).each do |i|
-        best_child.toggle_bit i  if @rng.rand < CONFIG.genetic[:stationary][:mutation_p]
-        worst_child.toggle_bit i if @rng.rand < CONFIG.genetic[:stationary][:mutation_p]
+      # Mutation process
+      (0 ... first.length).each do |i|
+        first.toggle_bit i  if @rng.rand < CONFIG.genetic[:stationary][:mutation_p]
+        second.toggle_bit i if @rng.rand < CONFIG.genetic[:stationary][:mutation_p]
       end
 
+      first, second = second, first if fitness_for(first) < fitness_for(second)
+
       # Replacement scheme
-      worst, worst_i = @endless_forms.each_with_index.min_by{ |c, i| fitness_for c }
-      second, second_i = @endless_forms.each_with_index.min_by{ |c, i| (i == worst_i) ? 1 : (fitness_for c) }
+      worst, worst_i = @endless_forms.each_with_index.min_by do |c, i|
+        fitness_for c
+      end
+      sworst, sworst_i = @endless_forms.each_with_index.min_by do |c, i|
+        (i == worst_i) ? 1 : (fitness_for c)
+      end
 
-      if fitness_for(best_child) > fitness_for(worst)
-        if fitness_for(worst_child) > fitness_for(worst)
-          @endless_forms[worst_i] = worst_child
+      if fitness_for(first) > fitness_for(worst)
+        if fitness_for(second) > fitness_for(worst)
+          @endless_forms[worst_i] = second
 
-          if fitness_for(best_child) > fitness_for(second)
-            @endless_forms[second_i] = best_child
+          if fitness_for(first) > fitness_for(sworst)
+            @endless_forms[sworst_i] = first
           else
-            # We would want to keep the best child, right?
-            @endless_forms[worst_i] = best_child
+            # Prioritize the best of both children
+            @endless_forms[worst_i] = first
           end
         else
-          @endless_forms[worst_i] = best_child
+          @endless_forms[worst_i] = first
         end
       end
 
       @endless_forms
-    end
-
-    def evolution
-      (crossover *(selection 2)).sort_by{ |c| fitness_for c }
     end
   end
 end
