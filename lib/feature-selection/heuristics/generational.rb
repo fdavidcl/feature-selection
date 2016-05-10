@@ -9,10 +9,8 @@ module FeatureSelection
 
       # Mutation process
       mutated_count = CONFIG.genetic[:generational][:mutation_p] * new_population.length * chromosome_len
-      mutated_genes = (0 ... mutated_count).map do
-        @rng.rand(0 ... new_population.length * chromosome_len)
-      end
-      mutated_genes.each do |gene|
+      mutated_count.times do
+        gene = @rng.rand(0 ... new_population.length * chromosome_len)
         chromosome = gene / chromosome_len
         inner_gene = gene % chromosome_len
         new_population[chromosome].toggle_bit inner_gene
@@ -30,14 +28,18 @@ module FeatureSelection
 
     def evolution
       len = @endless_forms.length
+      # Number of couples that will produce children
       pair_count = CONFIG.genetic[:generational][:crossover_p] * len / 2
 
+      # Tournament select `len` chromosomes and traverse them as
+      # couples to generate children
       parents = selection len
       couples = parents.each_slice(2)
       children = couples.take(pair_count).map do |first, second|
         crossover first, second
       end
 
+      # Join children and selected chromosomes that didn't combine
       (children + couples.drop(pair_count)).flatten
     end
   end
