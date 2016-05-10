@@ -11,12 +11,15 @@ bibliography: doc/references.bib
 csl: doc/ieee.csl
 numbersections: yes
 header-includes:
+  - \usepackage{amsopn}
   - \usepackage{algorithmic}
   - \usepackage{algorithm}
   - \floatname{algorithm}{Algoritmo}
   - \renewcommand{\algorithmicrequire}{\textbf{Input:}}
   - \renewcommand{\algorithmicensure}{\textbf{Output:}}
   - \usepackage{pdflscape}
+  - \DeclareMathOperator*{\argmin}{arg\,min}
+  - \DeclareMathOperator*{\argmax}{arg\,max}
 ---
 
 \pagebreak
@@ -93,6 +96,8 @@ Los resultados obtenidos son reproducibles por otros usuarios ya que se ha fijad
 Además, las tablas y gráficos obtenidos resultan de la ejecución del guion `stats/stats.R` que se incluye en el código fuente, a partir de los archivos CSV que se obtengan como salida del programa en `out/` y se copien en el directorio `stats/csv/`. Este mismo documento se puede generar al completo mediante el comando `rake doc` (son necesarios el intérprete de R y el programa *pandoc* para ello).
 
 # Algoritmos empleados
+
+**Notas sobre pseudocódigo**: Se asume que *aleatorio()* es una función que devuelve un número aleatorio de una distribución uniforme en el rango que se pase como parámetro o en el intervalo [0, 1] si no se pasa un parámetro. Además, se nota [$a$ ... $b$] al conjunto de naturales desde $a$ hasta $b-1$.
 
 ## Práctica 1.b: Búsquedas por Trayectorias
 
@@ -352,7 +357,7 @@ La búsqueda tabú con memoria a largo plazo realiza iteraciones de la anterior 
 \caption{Operador de mutación con probabilidad $s$ de \textit{Iterative Local Search}}
 \label{ils-mutation}
 \begin{algorithmic}
-  \FOR{bit \textbf{en} muestrear([0 ... longitud(solución)], $s$)}
+  \FORALL{bit \textbf{en} muestrear([0 ... longitud(solución)], $s$)}
     \STATE{solución $\gets$ conmutar(solución, bit)}
   \ENDFOR
   \RETURN{solución}
@@ -361,9 +366,115 @@ La búsqueda tabú con memoria a largo plazo realiza iteraciones de la anterior 
 
 ## Práctica 3.b: Algoritmos Genéticos
 
+\begin{algorithm}
+\caption{Selección por torneo de $l$ individuos para ambos genéticos}
+\label{tournament}
+\begin{algorithmic}
+  \STATE{seleccionados $\gets$ [ ]}
+  \FOR{$l$ \textbf{times}}
+    \STATE{uno $\gets$ población[aleatorio()]}
+    \STATE{otro $\gets$ población[aleatorio()]}
+    \IF{fitness(uno) > fitness(otro)}
+      \STATE{seleccionados << uno}
+    \ELSE
+      \STATE{seleccionados << otro}
+    \ENDIF
+  \ENDFOR
+  \RETURN{seleccionados}
+\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}
+\caption{Operador de cruce para ambos genéticos}
+\label{crossover}
+\begin{algorithmic}
+  \STATE{long $\gets$ longitud(padre1)}
+  \STATE{comienzo, final $\gets$ ordenar([aleatorio(0 ... long), aleatorio(0 ... long)])}
+  \RETURN{[ hijo1: padre2[0 ... comienzo] + padre1[comienzo ... final] + padre2[final ... long],}
+  \STATE{   hijo2: padre1[0 ... comienzo] + padre2[comienzo ... final] + padre1[final ... long] ]}
+\end{algorithmic}
+\end{algorithm}
+
 ### Algoritmo Genético Generacional
 
+\begin{algorithm}
+\caption{Esquema de evolución y reemplazamiento del Genético Generacional}
+\label{generational}
+\begin{algorithmic}
+  \STATE{mejor $\gets \argmax\limits_{c\in\mbox{población}}\mbox{fitness}(c)$}
+  \STATE{num-parejas $\gets$ probabilidad-cruce $\times$ longitud(población) / 2}
+  \STATE{padres $\gets$ selección($l$: longitud(población))}
+  \STATE{hijos $\gets$ [ ]}
+  \FORALL{i \textbf{en} [0, 2, 4 ... num-parejas]}
+    \STATE{hijos << cruce(padre1: población[i], padre2: población[i + 1])}
+  \ENDFOR
+  \STATE{nueva-población $\gets$ hijos + padres[num-parejas ... longitud(padres)]}
+  \STATE{mutar(población: nueva-población)}
+  \IF{mejor $\notin$ nueva-población}
+    \STATE{peor-i $\gets \argmin\limits_{i\in[0\dots\mbox{longitud(población)}]}\mbox{fitness}(\mbox{población}[i])$}
+    \STATE{población[peor-i] $\gets$ mejor}
+  \ENDIF
+  \RETURN{nueva-población}
+\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}
+\caption{Operador de mutación con probabilidad $p$ para el Genético Generacional}
+\label{generational-mutation}
+\begin{algorithmic}
+  \STATE{mutaciones-esperadas $\gets$ $p\times$ longitud(población) $\times$ longitud-cromosoma}
+  \FOR{mutaciones-esperadas \textbf{times}}
+    \STATE{gen-mutado << aleatorio(0 ... longitud(población) $\times$ longitud-cromosoma)}
+    \STATE{cromosoma $\gets$ gen-mutado / longitud-cromosoma}
+    \STATE{bit $\gets$ gen-mutado \% longitud-cromosoma}
+    \STATE{conmutar(población[cromosoma], bit)}
+  \ENDFOR
+\end{algorithmic}
+\end{algorithm}
+
 ### Algoritmo Genético Estacionario
+
+\begin{algorithm}
+\caption{Esquema de evolución y reemplazamiento del Genético Estacionario}
+\label{stationary}
+\begin{algorithmic}
+  \STATE{primero, segundo $\gets$ cruce(selección($l$: longitud(población)))}
+  \IF{fitness(primero) < fitness(segundo)}
+    \STATE{primero, segundo $\gets$ segundo, primero}
+  \ENDIF
+  \STATE{mutar(primero, segundo)}
+  \STATE{peor-i $\gets \argmin\limits_{i\in[0\dots\mbox{longitud(población)]}}\mbox{fitness}(\mbox{población}[i])$}
+  \STATE{sp-i $\gets \argmin\limits_{i\in[0\dots\mbox{longitud(población)}]\setminus\{\mbox{peor-i}\}}\mbox{fitness}(\mbox{población}[i])$}
+  \IF{fitness(primero) > fitness(población[peor-i])}
+    \IF{fitness(segundo) > fitness(población[peor-i])}
+      \STATE{población[peor-i] $\gets$ segundo}
+      \IF{fitness(primero) > fitness(población[sp-i])}
+        \STATE{población[sp-i] $\gets$ primero}
+      \ELSE
+        \STATE{población[peor-i] $\gets$ primero}
+      \ENDIF
+    \ELSE
+      \STATE{población[peor-i] $\gets$ primero}
+    \ENDIF
+  \ENDIF
+  \RETURN{población}
+\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}
+\caption{Operador de mutación con probabilidad $p$ para el Genético Estacionario}
+\label{stationary-mutation}
+\begin{algorithmic}
+  \FORALL{bit \textbf{en} [0 ... longitud-cromosoma]}
+  \IF{aleatorio() < $p$}
+    \STATE{conmutar(primero, bit)}
+  \ENDIF
+  \IF{aleatorio() < $p$}
+    \STATE{conmutar(segundo, bit)}
+  \ENDIF
+\ENDFOR
+\end{algorithmic}
+\end{algorithm}
 
 # Implementación de las prácticas
 
@@ -385,9 +496,9 @@ Por otro lado, los algoritmos genéticos están implementados en las clases `Gen
 
 ## Instalación y configuración
 
-### Automática (Linux)
+### Automática (Linux/OS X)
 
-En sistemas Linux (y posiblemente OS X) basta con ejecutar `bin/setup` en un terminal bash. Este guion revisará las dependencias del programa, y es capaz de instalar una versión actual de Ruby para la ejecución de las pruebas.
+En sistemas Linux y OS X basta con ejecutar `bin/setup` en un terminal bash. Este guion revisará las dependencias del programa, y es capaz de instalar una versión actual de Ruby para la ejecución de las pruebas.
 
 Es necesario tener previamente instalados los paquetes básicos de desarrollo (por ejemplo `build-essential` en el caso de las distribuciones basadas en Ubuntu).
 
@@ -447,7 +558,7 @@ Los parámetros se han establecido de la siguiente forma:
         \STATE{candidatas << restantes $\setminus$ característica}
       \ENDIF
     \ENDFOR
-    \STATE{solución-nueva $\gets$ arg-max(candidatas, fitness)}
+    \STATE{solución-nueva $\gets \argmax\limits_{c\in\mbox{candidatas}}\mbox{fitness}(c)$}
     \IF{fitness(solución-nueva) > fitness(solución)}
       \STATE{restantes $\gets$ restantes $\setminus$ (solución-nueva $\setminus$ solución)}
       \STATE{solución $\gets$ solución-nueva}
@@ -474,6 +585,32 @@ La tabla \ref{global} presenta las medias y desviaciones de los resultados obten
 \input{stats/latex/SeqBackwardSelection.tex}
 \clearpage
 \end{landscape}
+
+## *Profiling*
+
+Se ha realizado un *profiling* de la implementación para comprobar en qué partes de los algoritmos se emplea el mayor tiempo. Los resultados afirman consistentemente que alrededor del 99% del tiempo se emplea en evaluar la función objetivo mediante el clasificador kNN. Esto indica que ninguna de las metaheurísticas utiliza un tiempo excesivo para cálculos fuera de dicha función, y además permite estimar previamente el tiempo de ejecución de los algoritmos, simplemente multiplicando el tiempo promedio de una evaluación del algoritmo kNN por el número de evaluaciones establecidas.
+
+A continuación se muestra un extracto de la salida del *profiler* de Ruby (de la gema *ruby-prof*) que se utilizó en una ejecución de la validación cruzada 5x2 del algoritmo GRASP para el dataset *wdbc*. Como se puede observar, 1461 de los 1463 segundos corresponden a la función `fitness_for` implementada en C en el clasificador de *knn_cv*.
+
+\tiny
+\begin{verbatim}
+Measure Mode: wall_time
+Total Time: 1463.0240149497986
+Sort by: total_time
+
+  %total   %self      total       self       wait      child            calls     name
+--------------------------------------------------------------------------------
+ 100.00%   0.00%   1463.024      0.000      0.000   1463.024                1     Global#[No method]
+                   1463.024      0.000      0.000   1463.024              1/1     FeatureSelection::Evaluator#evaluate
+--------------------------------------------------------------------------------
+                      0.165      0.165      0.000      0.000         10/85523     Array#map
+                   1461.345   1461.203      0.000      0.142      85513/85523     FeatureSelection::Heuristic#fitness_for
+  99.90%  99.89%   1461.510   1461.368      0.000      0.142            85523     KnnCv::Classifier#fitness_for
+                      0.079      0.079      0.000      0.000      85523/85523     BitArray#to_a
+                      0.063      0.063      0.000      0.000      72574/72874     Random#rand
+--------------------------------------------------------------------------------
+\end{verbatim}
+\normalsize
 
 ## Práctica 1.b: Resultados y análisis
 
