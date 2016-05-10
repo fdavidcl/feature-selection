@@ -276,6 +276,8 @@ La búsqueda tabú con memoria a largo plazo realiza iteraciones de la anterior 
 
 ### Búsqueda multiarranque básica
 
+La búsqueda multiarranque básica toma una búsqueda local dada (en nuestro caso, la búsqueda local de primer descenso) y la ejecuta varias veces tomando la mejor solución global. Se describe este proceso en el algoritmo \ref{bmb}.
+
 \begin{algorithm}
 \caption{Búsqueda multiarranque básica con $r$ reinicializaciones}
 \label{bmb}
@@ -292,6 +294,8 @@ La búsqueda tabú con memoria a largo plazo realiza iteraciones de la anterior 
 \end{algorithm}
 
 ### GRASP
+
+La técnica GRASP combina un algoritmo voraz aleatorizado (\ref{randomized-sfs}), basado en este caso en *Sequential Forward Selection*, con la búsqueda local. Se describe en el algoritmo \ref{grasp}.
 
 \begin{algorithm}
 \caption{Algoritmo GRASP con $r$ iteraciones}
@@ -336,6 +340,8 @@ La búsqueda tabú con memoria a largo plazo realiza iteraciones de la anterior 
 
 ### *Iterative Local Search*
 
+La búsqueda local iterativa o ILS introduce un operador de mutación (algoritmo \ref{ils-mutation}) agresivo en lugar de reinicializar la búsqueda local. Se describe en el algoritmo \ref{ils}.
+
 \begin{algorithm}
 \caption{\textit{Iterative Local Search} para $r$ iteraciones}
 \label{ils}
@@ -365,6 +371,8 @@ La búsqueda tabú con memoria a largo plazo realiza iteraciones de la anterior 
 \end{algorithm}
 
 ## Práctica 3.b: Algoritmos Genéticos
+
+Los algoritmos genéticos generacional y estacionario utilizan algunos componentes comunes, concretamente la técnica de selección por torneo y el operador de cruce, que se muestran en \ref{tournament} y \ref{crossover} respectivamente.
 
 \begin{algorithm}
 \caption{Selección por torneo de $l$ individuos para ambos genéticos}
@@ -396,6 +404,8 @@ La búsqueda tabú con memoria a largo plazo realiza iteraciones de la anterior 
 \end{algorithm}
 
 ### Algoritmo Genético Generacional
+
+En el algoritmo \ref{generational} se describe el algoritmo genético generacional, que utiliza el operador de mutación dado por el algoritmo \ref{generational-mutation}.
 
 \begin{algorithm}
 \caption{Esquema de evolución y reemplazamiento del Genético Generacional}
@@ -433,6 +443,8 @@ La búsqueda tabú con memoria a largo plazo realiza iteraciones de la anterior 
 \end{algorithm}
 
 ### Algoritmo Genético Estacionario
+
+En el algoritmo \ref{stationary} se describe el algoritmo genético estacionario, que utiliza el operador de mutación dado por el algoritmo \ref{stationary-mutation}.
 
 \begin{algorithm}
 \caption{Esquema de evolución y reemplazamiento del Genético Estacionario}
@@ -490,9 +502,9 @@ En lo referente a la implementación, se ha desarrollado una sencilla jerarquía
 
 Para las técnicas basadas en trayectorias simples y las basadas en búsqueda local se ha desarrollado una base común en la clase `LocalSearch`. En ella se implementa todo lo necesario para una búsqueda local de descenso de pendientes, tanto el bucle externo como la generación del vecindario, y lleva un registro de la mejor solución global. Así, únicamente la extracción de la próxima solución del vecindario se deja a las clases `FirstDescent` y `MaximumDescent`, y sirve como base para el enfriamiento simulado (`SimAnnealing`) y las búsquedas tabú (`BasicTabuSearch`, `TabuSearch`).
 
-Las búsquedas multiarranque toman como base la búsqueda local de primer descenso, por lo que se han implementado como clases que heredan de `FirstDescent`.
+Las búsquedas multiarranque toman como base la búsqueda local de primer descenso, por lo que se han implementado como clases que heredan de `FirstDescent`. Están implementadas en las clases `BasicMultistart`, `Grasp` e `IterativeLocalSearch`.
 
-Por otro lado, los algoritmos genéticos están implementados en las clases `GenerationalGenetic` y `StationaryGenetic`, teniendo ambas una base común en la clase `Genetic`.
+Por otro lado, los algoritmos genéticos están implementados en las clases `GenerationalGenetic` y `StationaryGenetic`, teniendo ambas una base común en la clase `Genetic`. Esta última además añade funcionalidad adicional a la función objetivo, ya que la memoiza haciendo uso de un Hash para así evitar evaluaciones repetidas de la misma solución.
 
 ## Instalación y configuración
 
@@ -513,6 +525,32 @@ El archivo donde se almacenan los parámetros del programa es `config.yml`. Se p
 ## Uso del programa
 
 El guion `bin/start` realiza las ejecuciones de todos los algoritmos sobre todos los datasets con la validación cruzada 5x2 y guarda los resultados en ficheros CSV en el directorio `out/`. Se puede editar fácilmente para ejecutar selectivamente algunos algoritmos o usar alguno de los datasets.
+
+## *Profiling*
+
+Se ha realizado un *profiling* de la implementación para comprobar en qué partes de los algoritmos se emplea el mayor tiempo. Los resultados afirman consistentemente que alrededor del 99% del tiempo se emplea en evaluar la función objetivo mediante el clasificador kNN. Esto indica que ninguna de las metaheurísticas utiliza un tiempo excesivo para cálculos fuera de dicha función, y además permite estimar previamente el tiempo de ejecución de los algoritmos, simplemente multiplicando el tiempo promedio de una evaluación del algoritmo kNN por el número de evaluaciones establecidas.
+
+A continuación se muestra un extracto de la salida del *profiler* de Ruby (de la gema *ruby-prof*) que se utilizó en una ejecución de la validación cruzada 5x2 del algoritmo GRASP para el dataset *wdbc*. Como se puede observar, 1461 de los 1463 segundos corresponden a la función `fitness_for` implementada en C en el clasificador de *knn_cv*.
+
+\tiny
+\begin{verbatim}
+Measure Mode: wall_time
+Total Time: 1463.0240149497986
+Sort by: total_time
+
+  %total   %self      total       self       wait      child            calls     name
+--------------------------------------------------------------------------------
+ 100.00%   0.00%   1463.024      0.000      0.000   1463.024                1     Global#[No method]
+                   1463.024      0.000      0.000   1463.024              1/1     FeatureSelection::Evaluator#evaluate
+--------------------------------------------------------------------------------
+                      0.165      0.165      0.000      0.000         10/85523     Array#map
+                   1461.345   1461.203      0.000      0.142      85513/85523     FeatureSelection::Heuristic#fitness_for
+  99.90%  99.89%   1461.510   1461.368      0.000      0.142            85523     KnnCv::Classifier#fitness_for
+                      0.079      0.079      0.000      0.000      85523/85523     BitArray#to_a
+                      0.063      0.063      0.000      0.000      72574/72874     Random#rand
+--------------------------------------------------------------------------------
+\end{verbatim}
+\normalsize
 
 # Experimentación realizada
 
@@ -539,12 +577,30 @@ Los parámetros se han establecido de la siguiente forma:
 * Búsqueda tabú
     * Número de vecinos generados: 30
     * Tamaño inicial de la lista tabú: $\frac 1 3$
+* Multiarranque básica
+    * Reinicializaciones: 25
+* GRASP
+    * Reinicializaciones: 25
+    * $\alpha$ (parámetro de cálculo del umbral): 0.3
+* *Iterative Local Search*
+    * Número de mutaciones realizadas: 24
+    * Razón de mutación: 0.1
+* Genético generacional
+    * Tamaño de la población: 30
+    * Probabilidad de cruce: 0.7
+    * Probabilidad de mutación: 0.001
+* Genético estacionario
+    * Tamaño de la población: 30
+    * Probabilidad de cruce: 1
+    * Probabilidad de mutación: 0.001
 
 ## Algoritmos para comparación: *Sequential Forward/Backward Selection*
 
+*Sequential Forward Selection* y *Sequential Backward Selection* son algoritmos voraces y deterministas para selección de características. El primero comienza con la lista vacía y trata de añadir únicamente las mejores características, mientras que el segundo toma la lista de características y elimina las que perjudican el rendimiento. Ambos se describen en el algoritmo \ref{sfs}, donde la variable *algoritmo-forward* es verdadera para el primero y falsa para el segundo.
+
 \begin{algorithm}
 \caption{Sequential Forward/Backward Selection}
-\label{randomized-sfs}
+\label{sfs}
 \begin{algorithmic}
   \STATE{solución $\gets$ [ ]}
   \STATE{restantes $\gets$ [0 ... num-características]}
@@ -585,32 +641,6 @@ La tabla \ref{global} presenta las medias y desviaciones de los resultados obten
 \input{stats/latex/SeqBackwardSelection.tex}
 \clearpage
 \end{landscape}
-
-## *Profiling*
-
-Se ha realizado un *profiling* de la implementación para comprobar en qué partes de los algoritmos se emplea el mayor tiempo. Los resultados afirman consistentemente que alrededor del 99% del tiempo se emplea en evaluar la función objetivo mediante el clasificador kNN. Esto indica que ninguna de las metaheurísticas utiliza un tiempo excesivo para cálculos fuera de dicha función, y además permite estimar previamente el tiempo de ejecución de los algoritmos, simplemente multiplicando el tiempo promedio de una evaluación del algoritmo kNN por el número de evaluaciones establecidas.
-
-A continuación se muestra un extracto de la salida del *profiler* de Ruby (de la gema *ruby-prof*) que se utilizó en una ejecución de la validación cruzada 5x2 del algoritmo GRASP para el dataset *wdbc*. Como se puede observar, 1461 de los 1463 segundos corresponden a la función `fitness_for` implementada en C en el clasificador de *knn_cv*.
-
-\tiny
-\begin{verbatim}
-Measure Mode: wall_time
-Total Time: 1463.0240149497986
-Sort by: total_time
-
-  %total   %self      total       self       wait      child            calls     name
---------------------------------------------------------------------------------
- 100.00%   0.00%   1463.024      0.000      0.000   1463.024                1     Global#[No method]
-                   1463.024      0.000      0.000   1463.024              1/1     FeatureSelection::Evaluator#evaluate
---------------------------------------------------------------------------------
-                      0.165      0.165      0.000      0.000         10/85523     Array#map
-                   1461.345   1461.203      0.000      0.142      85513/85523     FeatureSelection::Heuristic#fitness_for
-  99.90%  99.89%   1461.510   1461.368      0.000      0.142            85523     KnnCv::Classifier#fitness_for
-                      0.079      0.079      0.000      0.000      85523/85523     BitArray#to_a
-                      0.063      0.063      0.000      0.000      72574/72874     Random#rand
---------------------------------------------------------------------------------
-\end{verbatim}
-\normalsize
 
 ## Práctica 1.b: Resultados y análisis
 
@@ -694,8 +724,20 @@ Los datos recogidos y el análisis realizado nos muestran que es difícil decidi
 
 ### Análisis de resultados
 
-### Conclusiones
+De los resultados recogidos y las visualizaciones generadas podemos concluir que las tres metaheurísticas estudiadas en esta práctica consiguen mejores resultados que los algoritmos de comparación durante el entrenamiento, aunque dicha mejora no siempre se ve representada en la evaluación con los datos de test.
 
+De entre las tres técnicas nuevas, observamos que GRASP tiene tendencia a otorgar resultados similares o mejores que las otras dos en entrenamiento, mientras que dicho rendimiento baja considerablemente en test. La excepción es el dataset Arrhythmia, que presenta un caso muy similar al que ocurría previamente con *Sequential Forward Selection* frente a las búsquedas locales. Esto último era esperable, ya que al estar esta técnica GRASP basada en una versión aleatorizada de SFS, parte de su comportamiento deriva de dicho algoritmo. De hecho, las razones que intuitivamente motivan la bajada de rendimiento de GRASP en los datos de test de WDBC y Libras, y su buen resultado en Arrhythmia, son de nuevo que la tasa de reducción que proporciona es muy agresiva, con promedios del 75%, 85% y 94% respectivamente; lo que ocasiona que en los datasets con baja dimensionalidad se pierda demasiada información como para mantener el buen rendimiento en test, mientras que en alta dimensionalidad consigue reducir mucho el número de características y evita que la cantidad de estas afecte negativamente a la tasa de clasificación del algoritmo kNN.
+
+<!--
+Un caso peculiar que se observa en los datos recogidos para el algoritmo GRASP es una anomalía en test en Arrhythmia, que se sitúa en una tasa del 42%, anormalmente baja. Sin embargo, la tasa correspondiente durante el entrenamiento fue de más del 82% de instancias correctamente clasificadas. A la luz del resto de casos, esto no deja de ser más que una anécdota, que puede revelar un particionamiento de los datos en que el conjunto de entrenamiento ha resultado ser especialmente poco representativo del de test.
+-->
+
+De entre las dos técnicas basadas únicamente en búsqueda local, se podía esperar en principio que ILS mejorara notablemente a la multiarranque básica, puesto que las soluciones iniciales que toma son modificaciones sobre soluciones ya optimizadas, en lugar de nuevas soluciones aleatorias. Sin embargo, esta hipótesis no se ve confirmada por los resultados, que muestran un rendimiento muy similar entre ambas heurísticas. Aunque en promedio ILS es ligeramente mejor que la multiarranque básica, la desviación de los datos nos indica una solapación de los resultados que no permite extraer una conclusión sólida. El motivo de este resultado puede ser que la mutación escogida para ILS (se conmutan el 10% de los bits) sea demasiado poco agresiva como para sacar a la heurística de la zona del óptimo local, o bien sea suficientemente agresiva como para que al mutar una solución de calidad se obtenga una solución que proporcione un rendimiento similar a cualquier solución aleatoria. Entre las posibles ideas que se podrían aplicar para tratar este problema están alterar el parámetro de mutación, o bien modificar el propio operador, tratando de reducir su comportamiento aleatorio y sustituirlo por otro más informado.
+
+### Conclusiones
+Las conclusiones que se pueden extraer de la experimentación realizada son varias. Por un lado, se ha comprobado que la técnica GRASP depende en gran medida del algoritmo voraz aleatorizado en que se base, y que se pueden predecir aspectos en su comportamiento a partir de dicho algoritmo. En nuestro caso, al basarse en *Sequential Forward Selection*, GRASP ha resultado muy eficiente en cuanto a la tasa de reducción pero también se ve penalizado por la misma razón en conjuntos de baja dimensionalidad, mientras que en alta dimensionalidad es donde es capaz de trabajar con mayor éxito. Las técnicas de búsqueda multiarranque básica e *Iterative Local Search* tienen comportamientos similares pero esta última podría variar su comportamiento en función del operador de mutación escogido. Además, sus tasas de reducción y tiempos son muy similares, por lo que entre las dos parece que ILS tiene una ligera ventaja.
+
+Entre GRASP y las otras dos técnicas, la diferencia la ha marcado la dimensionalidad del dataset, GRASP únicamente obtiene buenos resultados en test si la dimensionalidad es alta, por las razones ya mencionadas. Respecto a los algoritmos voraces, las técnicas multiarranque son capaces de explorar mejor el espacio de soluciones y llegar a resultados que se mantienen similares tanto en entrenamiento como en test, algo en lo que no son tan consistentes las voraces.
 
 ## Práctica 3.b: Resultados y análisis
 
