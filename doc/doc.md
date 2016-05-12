@@ -70,6 +70,22 @@ La función objetivo, a maximizar, es la proporción de aciertos sobre el total 
 \end{algorithmic}
 \end{algorithm}
 
+## Generación de soluciones aleatorias
+
+El siguiente procedimiento es el utilizado para generar las soluciones iniciales de las técnicas que las requieran, y las poblaciones iniciales de los genéticos.
+
+\begin{algorithm}
+\caption{Generación de una solución aleatoria}
+\label{aleatoria}
+\begin{algorithmic}
+  \STATE{solución $\gets$ [ ]}
+  \FOR{número-atributos \textbf{times}}
+    \STATE{solución << aleatorio(\{0, 1\})}
+  \ENDFOR
+  \RETURN{solución}
+\end{algorithmic}
+\end{algorithm}
+
 ## Generación de vecindario
 
 Para generar el vecindario, obtenemos vecinos mientras sean necesarios conmutando un bit aleatorio de la solución actual:
@@ -363,7 +379,7 @@ La búsqueda local iterativa o ILS introduce un operador de mutación (algoritmo
 \caption{Operador de mutación con probabilidad $s$ de \textit{Iterative Local Search}}
 \label{ils-mutation}
 \begin{algorithmic}
-  \FORALL{bit \textbf{en} muestrear([0 ... longitud(solución)], $s$)}
+  \FORALL{bit \textbf{en} muestrear([0 ... longitud(solución)], probabilidad: $s$)}
     \STATE{solución $\gets$ conmutar(solución, bit)}
   \ENDFOR
   \RETURN{solución}
@@ -699,6 +715,8 @@ Los datos recogidos y el análisis realizado nos muestran que es difícil decidi
 
 ### Tablas de resultados por heurística
 
+Las tablas siguientes contienen los resultados recogidos para las búsquedas multiarranque. En concreto, la tabla \ref{BasicMultistart} detalla el rendimiento de la búsqueda multiarranque básica, la \ref{Grasp} expone los datos para el algoritmo GRASP y la \ref{IterativeLocalSearch} muestra los de *Iterative Local Search*.
+
 \begin{landscape}
 \input{stats/latex/BasicMultistart.tex}
 \input{stats/latex/Grasp.tex}
@@ -728,9 +746,7 @@ De los resultados recogidos y las visualizaciones generadas podemos concluir que
 
 De entre las tres técnicas nuevas, observamos que GRASP tiene tendencia a otorgar resultados similares o mejores que las otras dos en entrenamiento, mientras que dicho rendimiento baja considerablemente en test. La excepción es el dataset Arrhythmia, que presenta un caso muy similar al que ocurría previamente con *Sequential Forward Selection* frente a las búsquedas locales. Esto último era esperable, ya que al estar esta técnica GRASP basada en una versión aleatorizada de SFS, parte de su comportamiento deriva de dicho algoritmo. De hecho, las razones que intuitivamente motivan la bajada de rendimiento de GRASP en los datos de test de WDBC y Libras, y su buen resultado en Arrhythmia, son de nuevo que la tasa de reducción que proporciona es muy agresiva, con promedios del 75%, 85% y 94% respectivamente; lo que ocasiona que en los datasets con baja dimensionalidad se pierda demasiada información como para mantener el buen rendimiento en test, mientras que en alta dimensionalidad consigue reducir mucho el número de características y evita que la cantidad de estas afecte negativamente a la tasa de clasificación del algoritmo kNN.
 
-<!--
-Un caso peculiar que se observa en los datos recogidos para el algoritmo GRASP es una anomalía en test en Arrhythmia, que se sitúa en una tasa del 42%, anormalmente baja. Sin embargo, la tasa correspondiente durante el entrenamiento fue de más del 82% de instancias correctamente clasificadas. A la luz del resto de casos, esto no deja de ser más que una anécdota, que puede revelar un particionamiento de los datos en que el conjunto de entrenamiento ha resultado ser especialmente poco representativo del de test.
--->
+Un caso peculiar que se observa en los datos recogidos para el algoritmo GRASP es una anomalía en test en Arrhythmia, que se sitúa en una tasa de clasificación del 42%, anormalmente baja. Sin embargo, la tasa correspondiente durante el entrenamiento fue de más del 82% de instancias correctamente clasificadas. A la luz del resto de casos, esto puede revelar un particionamiento de los datos en que el conjunto de entrenamiento ha resultado ser especialmente poco representativo del de test. Es importante notar que tanto el conjunto de entrenamiento como el de test cuentan con menos de 200 instancias pero 278 atributos, por lo que no es difícil pensar que esta pueda ser la causa.
 
 De entre las dos técnicas basadas únicamente en búsqueda local, se podía esperar en principio que ILS mejorara notablemente a la multiarranque básica, puesto que las soluciones iniciales que toma son modificaciones sobre soluciones ya optimizadas, en lugar de nuevas soluciones aleatorias. Sin embargo, esta hipótesis no se ve confirmada por los resultados, que muestran un rendimiento muy similar entre ambas heurísticas. Aunque en promedio ILS es ligeramente mejor que la multiarranque básica, la desviación de los datos nos indica una solapación de los resultados que no permite extraer una conclusión sólida. El motivo de este resultado puede ser que la mutación escogida para ILS (se conmutan el 10% de los bits) sea demasiado poco agresiva como para sacar a la heurística de la zona del óptimo local, o bien sea suficientemente agresiva como para que al mutar una solución de calidad se obtenga una solución que proporcione un rendimiento similar a cualquier solución aleatoria. Entre las posibles ideas que se podrían aplicar para tratar este problema están alterar el parámetro de mutación, o bien modificar el propio operador, tratando de reducir su comportamiento aleatorio y sustituirlo por otro más informado.
 
@@ -742,6 +758,8 @@ Entre GRASP y las otras dos técnicas, la diferencia la ha marcado la dimensiona
 ## Práctica 3.b: Resultados y análisis
 
 ### Tablas de resultados por heurística
+
+Las siguientes tablas plasman los datos recogidos a partir de las ejecuciones de los dos tipos de algoritmo genético. La tabla \ref{GenerationalGenetic} detalla los del generacional y la \ref{StationaryGenetic} los del estacionario.
 
 \begin{landscape}
 \input{stats/latex/GenerationalGenetic.tex}
@@ -767,6 +785,55 @@ Entre GRASP y las otras dos técnicas, la diferencia la ha marcado la dimensiona
 
 ### Análisis de resultados
 
+Los algoritmos genéticos nos permiten explorar el espacio de soluciones mucho mejor que las técnicas básicas voraces y las búsquedas locales simples, y optimizar de forma aceptable las soluciones encontradas. Esto se demuestra claramente en los resultados de entrenamiento, donde especialmente el genético generacional domina sobre el resto de técnicas, e incluso en Arrhythmia está a la altura de SFS.
+
+De nuevo, los resultados en los conjuntos de test son menos concluyentes, y podemos pensar en el sobreajuste como posible motivo de la diferencia de rendimiento entre estos y los de entrenamiento. Además, aquí el genético generacional pierde parte de la ventaja que tenía sobre el estacionario, ya que este último ocasionalmente obtiene mejores resultados.
+
+La ventaja que se observa del genético generacional frente al estacionario en los datos de entrenamiento puede provenir de una convergencia más rápida, es decir, el algoritmo estacionario podría llegar a soluciones de calidad similar pero necesitando un límite de evaluaciones mayor para calcularlas, ya que la población del generacional cambia más rápido al generarse más hijos en cada iteración, lo que provoca que los siguientes hijos se basen en estos; mientras que en el estacionario los hijos de cada iteración se pueden producir mediante individuos que llevan mucho tiempo en la población, lo que ralentiza la convergencia.
+
+Un aspecto que resulta notable sobre estos datos es que, mientras que los genéticos deberían ser capaces de explorar soluciones con distintas tasas de reducción, las soluciones propuestas siempre tienen una tasa de alrededor del 50%. Observamos que el algoritmo de generación de una solución aleatoria (algoritmo \ref{aleatoria}) es más propenso a producir soluciones con aproximadamente la mitad de unos y la mitad de ceros, soluciones que proporcionan ese tipo de tasas de reducción. Nos podríamos plantear si el generar una población inicial con soluciones de tasa de reducción similar al 50% influye en que el algoritmo genético trabaje más con este tipo de soluciones que con otras de distinta tasa de reducción.
+
+Para estudiar la variación en el comportamiento de los algoritmos al inicializarlas con soluciones de distintas tasas de reducción, se podría proponer un método alternativo para la generación de la población, como el que se muestra en el algoritmo \ref{aleatoria2}. Es claro que en este caso, al decidir aleatoriamente la cantidad de unos que tendrá la representación de la solución, las tasas de reducción serán aleatorias. Sin embargo, con este esquema de generación, no todas las soluciones tienen la misma probabilidad de ser escogidas, ya que una vez escogida la cantidad de unos habrá más soluciones posibles conforme más se acerque ese número a la mitad del tamaño del vector solución.
+
+\begin{algorithm}
+\caption{Método alternativo de generación de soluciones aleatorias}
+\label{aleatoria2}
+\begin{algorithmic}
+  \STATE{solución $\gets$ [0, 0, 0, (...) 0]}
+  \STATE{unos $\gets$ muestrear([0 ... longitud(solución)], tamaño: aleatorio(0 ... longitud(solución)))}
+  \FORALL{bit \textbf{en} unos}
+    \STATE{solución[bit] $\gets$ 1}
+  \ENDFOR
+  \RETURN{solución}
+\end{algorithmic}
+\end{algorithm}
+
+Por último, otro aspecto en que se podría alterar el comportamiento de los genéticos sería modificando el operador de cruce por otro que se adapte mejor al problema de selección de características. En concreto, podría utilizarse el descrito en el algoritmo \ref{cruce-pro}.
+
+\begin{algorithm}
+\caption{Operador alternativo de cruce}
+\label{cruce-pro}
+\begin{algorithmic}
+  \STATE{hijo1 $\gets$ [ ]}
+  \STATE{hijo2 $\gets$ [ ]}
+  \FORALL{i \textbf{en} [0 ... longitud(padre1)]}
+    \IF{padre1[i] = padre2[i]}
+      \STATE{hijo1 << padre1[i]}
+      \STATE{hijo2 << padre1[i]}
+    \ELSE
+      \STATE{bit $\gets$ aleatorio(\{0, 1\})}
+      \STATE{hijo1 << bit}
+      \STATE{hijo2 << $1-$bit}
+    \ENDIF
+  \ENDFOR
+  \RETURN{[ hijo1, hijo2 ]}
+\end{algorithmic}
+\end{algorithm}
+
 ### Conclusiones
+
+Hemos deducido que los algoritmos genéticos optimizan la función objetivo notablemente mejor que la mayoría de técnicas ya estudiadas, aunque al evaluar en datos de test se reduce el rendimiento. La convergencia del genético generacional ha sido más rápida que la del estacionario y hacia mejores soluciones, por lo que se puede afirmar que tiene cierta ventaja.
+
+Se ha planteado la cuestión de cómo altera el comportamiento del algoritmo la población inicial generada aleatoriamente, y se ha propuesto un método alternativo al utilizado originalmente que podría cambiar notablemente los resultados. Asimismo, se ha descrito un posible operador de cruce que se corresponde mejor con el problema estudiado. Sería conveniente analizar en qué medida estos cambios afectan al rendimiento de los algoritmos utilizados.
 
 # Referencias
