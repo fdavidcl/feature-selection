@@ -9,7 +9,7 @@ module FeatureSelection
 
       # Mutation process
       mutated_count = CONFIG.genetic[:generational][:mutation_p] * new_population.length * chromosome_len
-      mutated_count.times do
+      mutated_count.round.times do
         gene = @rng.rand(0 ... new_population.length * chromosome_len)
         chromosome = gene / chromosome_len
         inner_gene = gene % chromosome_len
