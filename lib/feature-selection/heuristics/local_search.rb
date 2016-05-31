@@ -1,7 +1,33 @@
 require_relative "heuristic"
 
 module FeatureSelection
+  module LocalTools
+    def neighborhood
+      Enumerator.new do |yielder|
+        # Randomly generate the neighborhood by flipping each bit in the solution
+        (0 ... @solution.length).to_a.shuffle!(random: @rng).each do |f|
+          attempt = @solution.clone.toggle_bit(f)
+
+          yielder << [
+            attempt,
+            fitness_for(attempt),
+            f
+          ]
+        end
+      end
+    end
+
+    # First descent selection
+    def select_next
+      neighborhood.lazy.take(@max_evaluations - @evaluations).detect do |attempt, fitness|
+        fitness > @fitness
+      end
+    end
+  end
+
   class LocalSearch < Heuristic
+    include LocalTools
+    
     def initialize dataset, debug: false, random: Random.new(CONFIG.random_seed)
       super
 
@@ -43,21 +69,6 @@ module FeatureSelection
           next_one = select_next
         rescue ArgumentError
           next_one = nil
-        end
-      end
-    end
-
-    def neighborhood
-      Enumerator.new do |yielder|
-        # Randomly generate the neighborhood by flipping each bit in the solution
-        (0 ... @solution.length).to_a.shuffle!(random: @rng).each do |f|
-          attempt = @solution.clone.toggle_bit(f)
-
-          yielder << [
-            attempt,
-            fitness_for(attempt),
-            f
-          ]
         end
       end
     end
