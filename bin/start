@@ -5,39 +5,43 @@ require "ruby-prof"
 
 datasets = [
   FeatureSelection::Dataset.read_arff("data/wdbc.arff", 0).normalize!,
-  FeatureSelection::Dataset.read_arff("data/movement_libras.arff").normalize!,
-  FeatureSelection::Dataset.read_arff("data/arrhythmia.arff").normalize!
+  # FeatureSelection::Dataset.read_arff("data/movement_libras.arff").normalize!,
+  # FeatureSelection::Dataset.read_arff("data/arrhythmia.arff").normalize!
 ]
 
 heuristics = {
-  "No selection (kNN with all features)" => FeatureSelection::NoSelection,
-  "Sequential Forward Selection" => FeatureSelection::SeqForwardSelection,
-  "Sequential Backward Selection" => FeatureSelection::SeqBackwardSelection,
-  "First-descent Local Search" => FeatureSelection::FirstDescent,
+  # "No selection (kNN with all features)" => FeatureSelection::NoSelection,
+  # "Sequential Forward Selection" => FeatureSelection::SeqForwardSelection,
+  # "Sequential Backward Selection" => FeatureSelection::SeqBackwardSelection,
+  # "First-descent Local Search" => FeatureSelection::FirstDescent,
   # "Maximum-descent Local Search" => FeatureSelection::MaximumDescent,
   # "Simulated Annealing" => FeatureSelection::SimAnnealing,
   # "Basic Tabu Search" => FeatureSelection::BasicTabuSearch,
   # "Complete Tabu Search" => FeatureSelection::TabuSearch,
-  "Basic Multi-start Search" => FeatureSelection::BasicMultistart,
-  "Iterative Local Search" => FeatureSelection::IterativeLocalSearch,
-  "GRASP" => FeatureSelection::Grasp,
-  "Generational Genetic" => FeatureSelection::GenerationalGenetic,
-  "Stationary Genetic" => FeatureSelection::StationaryGenetic
+  # "Basic Multi-start Search" => FeatureSelection::BasicMultistart,
+  # "Iterative Local Search" => FeatureSelection::IterativeLocalSearch,
+  # "GRASP" => FeatureSelection::Grasp,
+  # "Generational Genetic" => FeatureSelection::GenerationalGenetic,
+  # "Stationary Genetic" => FeatureSelection::StationaryGenetic,
+  "Memetic[10, 1]" => FeatureSelection::Memetic(10, 1, false),
+  "Memetic[10, 0.1]" => FeatureSelection::Memetic(10, 0.1, false),
+  "Memetic[10, 0.1mej]" => FeatureSelection::Memetic(10, 0.1, true)
 }
 
 datasets.each do |dataset|
+  fork do
   puts "Using #{dataset}."
 
   ev = FeatureSelection::Evaluator.new folds: 2, repeats: 5
 
   heuristics.each do |name, heuristic|
     puts "", "-" * 80, "|#{name.center(78)}|", "-" * 80
-    #RubyProf.start
+    # RubyProf.start
     evaluation = ev.evaluate heuristic, dataset, csv: true
-    #result = RubyProf.stop
+    # result = RubyProf.stop
 
-    #printer = RubyProf::GraphPrinter.new(result)
-    #printer.print(STDOUT, {})
+    # printer = RubyProf::GraphPrinter.new(result)
+    # printer.print(STDOUT, {})
 
     output = File.new("out/#{dataset.name}_#{heuristic.name}_#{Time.now.xmlschema}.log", "w")
     output << evaluation[:csv]
@@ -50,4 +54,7 @@ datasets.each do |dataset|
     puts "Reduction ratio: #{results[:reduction].reduce(&:+)/results[:reduction].length}"
     puts "Time spent: total #{results[:time].reduce(&:+)}, mean #{results[:time].reduce(&:+)/results[:time].length}"
   end
+  end
 end
+
+Process.wait
