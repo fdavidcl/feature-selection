@@ -1,4 +1,4 @@
-require_relative "first_descent"
+require_relative "local_search"
 require_relative "randomized_sfs"
 
 module FeatureSelection

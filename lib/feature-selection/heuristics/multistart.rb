@@ -1,4 +1,4 @@
-require_relative "first_descent"
+require_relative "local_search"
 
 module FeatureSelection
   class BasicMultistart < FirstDescent
