@@ -7,6 +7,9 @@ module FeatureSelection
     Class.new(GenerationalGenetic) do
       include LocalTools
 
+      # Extension of Genetic#run
+      # Todo: shouldn't use define_method. `def` is better but it won't recognize
+      # the outer scope. Work this shit out
       define_method "run" do
         counter = 0
 
