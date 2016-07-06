@@ -7,10 +7,19 @@ module FeatureSelection
     Class.new(GenerationalGenetic) do
       include LocalTools
 
+      def initialize dataset, debug: false, random: Random.new(CONFIG.random_seed)
+        super
+        @endless_forms = (0 ... CONFIG.memetic[:size]).map{ random_solution }
+      end
+
+      define_singleton_method :name do
+        "FeatureSelection::Memetic(#{number_generations},#{population_ratio},#{prioritize})"
+      end
+
       # Extension of Genetic#run
       # Todo: shouldn't use define_method. `def` is better but it won't recognize
       # the outer scope. Work this shit out
-      define_method "run" do
+      define_method :run do
         counter = 0
 
         until @evaluations >= CONFIG.max_evaluations
@@ -20,6 +29,7 @@ module FeatureSelection
           @endless_forms = generation
           counter += 1
           if counter == number_generations
+            puts "Now entering local search" if @debug
             amount = population_ratio * @endless_forms.length
 
             indices = if prioritize
@@ -29,13 +39,15 @@ module FeatureSelection
               end
 
             indices.each do |index|
-              next_one = next_first_descent @endless_forms[index], fitness_for(current_best)
+              next_one, next_fitness = next_first_descent @endless_forms[index], fitness_for(current_best)
               if !next_one.nil?
+                puts next_one if @debug && next_fitness > fitness_for(current_best)
                 @endless_forms[index] = next_one
               end
             end
 
             counter = 0
+            puts "Now exiting local search" if @debug
           end
         end
 

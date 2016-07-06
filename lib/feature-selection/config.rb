@@ -48,6 +48,41 @@ module FeatureSelection
               crossover_p: 1,
               mutation_p: 0.001
             }
+          },
+          memetic: {
+            size: 10,
+            models: [
+              {
+                generations: 10,
+                population_ratio: 1,
+                prioritize: false
+              },
+              {
+                generations: 10,
+                population_ratio: 0.1,
+                prioritize: false
+              },
+              {
+                generations: 10,
+                population_ratio: 0.1,
+                prioritize: true
+              },
+              {
+                generations: 1,
+                population_ratio: 1,
+                prioritize: false
+              },
+              {
+                generations: 1,
+                population_ratio: 0.1,
+                prioritize: false
+              },
+              {
+                generations: 1,
+                population_ratio: 0.1,
+                prioritize: true
+              }
+            ]
           }
         }.each do |key, value|
           store[key] = value

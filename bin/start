@@ -5,8 +5,8 @@ require "ruby-prof"
 
 datasets = [
   FeatureSelection::Dataset.read_arff("data/wdbc.arff", 0).normalize!,
-  # FeatureSelection::Dataset.read_arff("data/movement_libras.arff").normalize!,
-  # FeatureSelection::Dataset.read_arff("data/arrhythmia.arff").normalize!
+  FeatureSelection::Dataset.read_arff("data/movement_libras.arff").normalize!,
+  FeatureSelection::Dataset.read_arff("data/arrhythmia.arff").normalize!
 ]
 
 heuristics = {
@@ -22,14 +22,14 @@ heuristics = {
 # "Iterative Local Search"               => FeatureSelection::IterativeLocalSearch,
 # "GRASP"                                => FeatureSelection::Grasp,
 # "Generational Genetic"                 => FeatureSelection::GenerationalGenetic,
-# "Stationary Genetic"                   => FeatureSelection::StationaryGenetic,
-  "Memetic[10, 1]"                       => FeatureSelection::Memetic(10, 1, false),
-  "Memetic[10, 0.1]"                     => FeatureSelection::Memetic(10, 0.1, false),
-  "Memetic[10, 0.1mej]"                  => FeatureSelection::Memetic(10, 0.1, true),
-  "Memetic[1, 1]"                        => FeatureSelection::Memetic(1, 1, false),
-  "Memetic[1, 0.1]"                      => FeatureSelection::Memetic(1, 0.1, false),
-  "Memetic[1, 0.1mej]"                   => FeatureSelection::Memetic(1, 0.1, true)
+# "Stationary Genetic"                   => FeatureSelection::StationaryGenetic
 }
+(0 ... 6).each do |e|
+  gen = FeatureSelection::CONFIG.memetic[:models][e][:generations]
+  ratio = FeatureSelection::CONFIG.memetic[:models][e][:population_ratio]
+  best = FeatureSelection::CONFIG.memetic[:models][e][:prioritize]
+  heuristics["Memetic[#{gen}, #{ratio}, best: #{best}]"] = FeatureSelection::Memetic(gen, ratio, best)
+end
 
 datasets.each do |dataset|
   fork do
