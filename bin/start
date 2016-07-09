@@ -24,40 +24,39 @@ heuristics = {
 # "Generational Genetic"                 => FeatureSelection::GenerationalGenetic,
 # "Stationary Genetic"                   => FeatureSelection::StationaryGenetic
 }
-(0 ... 6).each do |e|
-  gen = FeatureSelection::CONFIG.memetic[:models][e][:generations]
-  ratio = FeatureSelection::CONFIG.memetic[:models][e][:population_ratio]
-  best = FeatureSelection::CONFIG.memetic[:models][e][:prioritize]
+FeatureSelection::CONFIG.memetic[:models].each do |e|
+  gen = e[:generations]
+  ratio = e[:population_ratio]
+  best = e[:prioritize]
   heuristics["Memetic[#{gen}, #{ratio}, best: #{best}]"] = FeatureSelection::Memetic(gen, ratio, best)
 end
 
-datasets.each do |dataset|
-  fork do
-  puts "Using #{dataset}."
+ev = FeatureSelection::Evaluator.new folds: 2, repeats: 5
 
-  ev = FeatureSelection::Evaluator.new folds: 2, repeats: 5
+heuristics.each do |name, heuristic|
+  fork do # launch a process per heuristic
+    datasets.each do |dataset|
+      puts "Using #{dataset}."
+      puts "", "-" * 80, "|#{name.center(78)}|", "-" * 80
+      # RubyProf.start
+      evaluation = ev.evaluate heuristic, dataset, csv: true
+      # result = RubyProf.stop
 
-  heuristics.each do |name, heuristic|
-    puts "", "-" * 80, "|#{name.center(78)}|", "-" * 80
-    # RubyProf.start
-    evaluation = ev.evaluate heuristic, dataset, csv: true
-    # result = RubyProf.stop
+      # printer = RubyProf::GraphPrinter.new(result)
+      # printer.print(STDOUT, {})
 
-    # printer = RubyProf::GraphPrinter.new(result)
-    # printer.print(STDOUT, {})
+      output = File.new("out/#{dataset.name}_#{heuristic.name}_#{Time.now.xmlschema}.log", "w")
+      output << evaluation[:csv]
+      output.close
 
-    output = File.new("out/#{dataset.name}_#{heuristic.name}_#{Time.now.xmlschema}.log", "w")
-    output << evaluation[:csv]
-    output.close
-
-    results = evaluation[:results]
-    puts "-" * 80, "Summary".center(80)
-    puts "Fitness in training (mean): #{results[:training].reduce(&:+)/results[:training].length}"
-    puts "Fitness in test (mean): #{results[:test].reduce(&:+)/results[:test].length}"
-    puts "Reduction ratio: #{results[:reduction].reduce(&:+)/results[:reduction].length}"
-    puts "Time spent: total #{results[:time].reduce(&:+)}, mean #{results[:time].reduce(&:+)/results[:time].length}"
-  end
+      results = evaluation[:results]
+      puts "-" * 80, "Summary".center(80)
+      puts "Fitness in training (mean): #{results[:training].reduce(&:+)/results[:training].length}"
+      puts "Fitness in test (mean): #{results[:test].reduce(&:+)/results[:test].length}"
+      puts "Reduction ratio: #{results[:reduction].reduce(&:+)/results[:reduction].length}"
+      puts "Time spent: total #{results[:time].reduce(&:+)}, mean #{results[:time].reduce(&:+)/results[:time].length}"
+    end
   end
 end
 
-Process.wait
+Process.waitall
