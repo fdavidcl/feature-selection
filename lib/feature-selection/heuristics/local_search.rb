@@ -35,6 +35,7 @@ module FeatureSelection
 
     # First descent selection
     def next_first_descent solution = nil, limit = nil
+      return nil if @evaluations >= CONFIG.max_evaluations
       solution ||= @solution
       limit ||= @fitness
       neighborhood(solution).lazy.take(CONFIG.max_evaluations - @evaluations).detect do |attempt, fitness|
@@ -44,6 +45,7 @@ module FeatureSelection
 
     # Max descent selection
     def next_max_descent solution = nil, limit = nil
+      return nil if @evaluations >= CONFIG.max_evaluations
       solution ||= @solution
       limit ||= @fitness
       neighbor, fitness = neighborhood(solution).lazy.take(CONFIG.max_evaluations - @evaluations).max_by &:last

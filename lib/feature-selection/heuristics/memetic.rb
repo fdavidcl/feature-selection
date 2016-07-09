@@ -18,7 +18,7 @@ module FeatureSelection
 
       # Extension of Genetic#run
       # Todo: shouldn't use define_method. `def` is better but it won't recognize
-      # the outer scope. Work this shit out
+      # the outer scope.
       define_method :run do
         counter = 0
 
@@ -39,7 +39,7 @@ module FeatureSelection
               end
 
             indices.each do |index|
-              next_one, next_fitness = next_first_descent @endless_forms[index], fitness_for(current_best)
+              next_one, next_fitness = next_first_descent @endless_forms[index], fitness_for(@endless_forms[index])
               if !next_one.nil?
                 puts next_one if @debug && next_fitness > fitness_for(current_best)
                 @endless_forms[index] = next_one
