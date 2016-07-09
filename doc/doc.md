@@ -504,6 +504,45 @@ En el algoritmo \ref{stationary} se describe el algoritmo genético estacionario
 \end{algorithmic}
 \end{algorithm}
 
+## Práctica 5.b: Búsquedas Híbridas
+
+Los algoritmos implementados en esta práctica son hibridaciones del genético generacional con la búsqueda local de primer descenso. Suponiendo que el parámetro *num-generaciones* indica el intervalo de generaciones en el que se aplica una búsqueda local, *razón-búsqueda* especifica la proporción de individuos que se someterán a dicha búsqueda y *priorizar-mejores* es un valor booleano verdadero cuando los individuos escogidos son los mejores de la población, la siguiente es una descripción de la técnica válida para cualquier terna de parámetros de ese tipo:
+
+\begin{algorithm}
+\caption{Algoritmo Memético}
+\label{memetic}
+\begin{algorithmic}
+  \STATE{contador = 0}
+  \WHILE{evaluaciones < máximo-evaluaciones}
+    \STATE{población $\gets$ genético::evolución-y-reemplazamiento(población)}
+    \STATE{contador $\gets$ contador + 1}
+    \IF{contador = num-generaciones}
+      \STATE{cantidad $\gets$ razón-búsqueda * longitud(población)}
+      \IF{priorizar-mejores}
+        \STATE{a-mejorar $\gets$ ordenar(población, criterio: fitness)[0 ... cantidad]}
+      \ELSE
+        \STATE{a-mejorar $\gets$ aleatorizar(población)[0 ... cantidad]}
+      \ENDIF
+
+      \FORALL{cromosoma \textbf{en} a-mejorar}
+        \STATE{cromosoma $\gets$ búsqueda-local::siguiente-solución(cromosoma)}
+      \ENDFOR
+      \STATE{contador $\gets$ 0}
+    \ENDIF
+  \ENDWHILE
+  \RETURN{$\argmax\limits_{c\in \mbox{población}}\mbox{fitness}(c)$}
+\end{algorithmic}
+\end{algorithm}
+
+Para la experimentación se han escogido las siguientes seis configuraciones de parámetros para el algoritmo memético:
+
+* memético(num-generaciones: 10, razón-búsqueda: 1, priorizar-mejores: no)
+* memético(num-generaciones: 10, razón-búsqueda: 0.1, priorizar-mejores: no)
+* memético(num-generaciones: 10, razón-búsqueda: 0.1, priorizar-mejores: sí)
+* memético(num-generaciones: 1, razón-búsqueda: 1, priorizar-mejores: no)
+* memético(num-generaciones: 1, razón-búsqueda: 0.1, priorizar-mejores: no)
+* memético(num-generaciones: 1, razón-búsqueda: 0.1, priorizar-mejores: sí)
+
 # Implementación de las prácticas
 
 La implementación de los algoritmos se ha realizado en el lenguaje Ruby, con la intención de aprovechar su expresividad a la hora de iterar de distintas formas por vectores y matrices [@enumerators], entre otras ventajas.
@@ -516,7 +555,7 @@ La aplicación tiene la estructura común de una librería Ruby (o *gema*), con 
 
 En lo referente a la implementación, se ha desarrollado una sencilla jerarquía de clases que permitan facilitar el desarrollo y la experimentación. Las clases base son `Heuristic`, de la que derivan todas las técnicas implementadas; `Classifier`, de la que deriva el clasificador kNN (y que permitiría implementar otros clasificadores adicionales); `Evaluator`, que se encarga de la evaluación por validación cruzada de las heurísticas, y `Dataset`, que encapsula los conjuntos de datos utilizados. Adicionalmente se utilizan las clases auxiliares `Config` y `ARFFFile`.
 
-Para las técnicas basadas en trayectorias simples y las basadas en búsqueda local se ha desarrollado una base común en la clase `LocalSearch`. En ella se implementa todo lo necesario para una búsqueda local de descenso de pendientes, tanto el bucle externo como la generación del vecindario, y lleva un registro de la mejor solución global. Así, únicamente la extracción de la próxima solución del vecindario se deja a las clases `FirstDescent` y `MaximumDescent`, y sirve como base para el enfriamiento simulado (`SimAnnealing`) y las búsquedas tabú (`BasicTabuSearch`, `TabuSearch`).
+Para las técnicas basadas en trayectorias simples y las basadas en búsqueda local se ha desarrollado una base común en el módulo `LocalTools` y la clase `LocalSearch`. En ella se implementa todo lo necesario para una búsqueda local de descenso de pendientes, tanto el bucle externo como la generación del vecindario, y lleva un registro de la mejor solución global. Así, únicamente la extracción de la próxima solución del vecindario se deja a las clases `FirstDescent` y `MaximumDescent`, y sirve como base para el enfriamiento simulado (`SimAnnealing`) y las búsquedas tabú (`BasicTabuSearch`, `TabuSearch`).
 
 Las búsquedas multiarranque toman como base la búsqueda local de primer descenso, por lo que se han implementado como clases que heredan de `FirstDescent`. Están implementadas en las clases `BasicMultistart`, `Grasp` e `IterativeLocalSearch`.
 
@@ -835,5 +874,14 @@ Por último, otro aspecto en que se podría alterar el comportamiento de los gen
 Hemos deducido que los algoritmos genéticos optimizan la función objetivo notablemente mejor que la mayoría de técnicas ya estudiadas, aunque al evaluar en datos de test se reduce el rendimiento. La convergencia del genético generacional ha sido más rápida que la del estacionario y hacia mejores soluciones, por lo que se puede afirmar que tiene cierta ventaja.
 
 Se ha planteado la cuestión de cómo altera el comportamiento del algoritmo la población inicial generada aleatoriamente, y se ha propuesto un método alternativo al utilizado originalmente que podría cambiar notablemente los resultados. Asimismo, se ha descrito un posible operador de cruce que se corresponde mejor con el problema estudiado. Sería conveniente analizar en qué medida estos cambios afectan al rendimiento de los algoritmos utilizados.
+
+## Práctica 5.b: Búsquedas Híbridas
+
+### Tablas de resultados por heurística
+### Rendimiento sobre los datos de entrenamiento
+### Rendimiento sobre los datos de test
+### Análisis de resultados
+### Conclusiones
+
 
 # Referencias
