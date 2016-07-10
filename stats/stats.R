@@ -19,24 +19,31 @@ heuristics <- c(
   "Grasp",
   "IterativeLocalSearch",
   "MaximumDescent",
+  "Memetic(1, 0.1)",
+  "Memetic(1, 0.1mej)",
+  "Memetic(1, 1)",
+  "Memetic(10, 0.1)",
+  "Memetic(10, 0.1mej)",
+  "Memetic(10, 1)",
   "NoSelection",
-  "SeqBackwardSelection",
-  "SeqForwardSelection",
+  "SBS",
+  "SFS",
   "SimAnnealing",
   "StationaryGenetic",
   "TabuSearch"
 )
-h_order <- c(8, 10, 9, 3, 7, 11, 2, 13, 1, 5, 6, 4, 12)
+h_order <- c(14, 16, 15, 3, 7, 17, 2, 19, 1, 5, 6, 4, 18, 11, 13, 12, 8, 10, 9)
 practicas <- list(
-  c(8, 10, 9, 3, 7, 11, 2, 13),
-  c(8, 10, 9, 1, 5, 6),
-  c(8, 10, 9, 4, 12)
+  c(14, 16, 15, 3, 7, 17, 2, 19),
+  c(14, 16, 15, 1, 5, 6),
+  c(14, 16, 15, 4, 18),
+  c(14, 16, 4, 11, 13, 12, 8, 10, 9)
 )
 ordered_heuristics <- heuristics[h_order]
 l <- length(heuristics)
 
 result_names <- lapply(1:length(results), function(i) list(dataset = datasets[ceiling(i/8)], heuristic = heuristics[((i - 1) %% 8) + 1]))
-row_names <- c("Partición 1-1", "Partición 1-2", "Partición 2-1", "Partición 2-2", "Partición 3-1", "Partición 3-2", "Partición 4-1", "Partición 4-2", "Partición 5-1", "Partición 5-2", "Media")
+row_names <- c("P. 1-1", "P. 1-2", "P. 2-1", "P. 2-2", "P. 3-1", "P. 3-2", "P. 4-1", "P. 4-2", "P. 5-1", "P. 5-2", "Media", "Rango")
 col_names <- c("%train", "%test", "%red", "time")
 col_names <- as.vector(sapply(c("wdbc", "libras", "arr"), function(d) paste(d, col_names)))
 
@@ -47,11 +54,14 @@ for (r in 1:length(results)) {
   results[[r]][c(1, 2, 3)] <- 100 * results[[r]][c(1, 2, 3)]
 }
 
+two_decs <- function(x) format(round(x, 2), nsmall=2)
 #############################################################
 # Tablas
 for (h in 1:length(heuristics)) {
-  join <- data.frame(wdbc = results[[2*l + h_order[h]]], libras = results[[l + h_order[h]]], arrhythmia = results[[h_order[h]]])
-  join <- rbind(join, sapply(join, mean))
+  join1 <- data.frame(wdbc = results[[2*l + h_order[h]]], libras = results[[l + h_order[h]]], arrhythmia = results[[h_order[h]]])
+  join <- rbind(join1, sapply(join1, mean))
+  join <- two_decs(join)
+  join <- rbind(join, sapply(join1, function(col) paste0(two_decs(min(col)), "-", two_decs(max(col)))))
   rownames(join) <- row_names
   names(join) <- col_names
   sink(paste0("latex/", ordered_heuristics[h], ".tex"))
@@ -65,7 +75,6 @@ for (h in 1:length(heuristics)) {
 
 #############################################################
 # Resultados globales
-two_decs <- function(x) format(round(x, 2), nsmall=2)
 means <- t(data.frame(lapply(1:length(heuristics), function(h) {
   join <- data.frame(wdbc = results[[2*l + h_order[h]]], libras = results[[l + h_order[h]]], arrhythmia = results[[h_order[h]]])
   paste(two_decs(sapply(join, mean)), "$\\pm$", two_decs(sapply(join, sd)))
