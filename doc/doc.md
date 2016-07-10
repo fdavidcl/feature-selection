@@ -534,15 +534,6 @@ Los algoritmos implementados en esta práctica son hibridaciones del genético g
 \end{algorithmic}
 \end{algorithm}
 
-Para la experimentación se han escogido las siguientes seis configuraciones de parámetros para el algoritmo memético:
-
-* memético(num-generaciones: 10, razón-búsqueda: 1, priorizar-mejores: no)
-* memético(num-generaciones: 10, razón-búsqueda: 0.1, priorizar-mejores: no)
-* memético(num-generaciones: 10, razón-búsqueda: 0.1, priorizar-mejores: sí)
-* memético(num-generaciones: 1, razón-búsqueda: 1, priorizar-mejores: no)
-* memético(num-generaciones: 1, razón-búsqueda: 0.1, priorizar-mejores: no)
-* memético(num-generaciones: 1, razón-búsqueda: 0.1, priorizar-mejores: sí)
-
 # Implementación de las prácticas
 
 La implementación de los algoritmos se ha realizado en el lenguaje Ruby, con la intención de aprovechar su expresividad a la hora de iterar de distintas formas por vectores y matrices [@enumerators], entre otras ventajas.
@@ -560,6 +551,8 @@ Para las técnicas basadas en trayectorias simples y las basadas en búsqueda lo
 Las búsquedas multiarranque toman como base la búsqueda local de primer descenso, por lo que se han implementado como clases que heredan de `FirstDescent`. Están implementadas en las clases `BasicMultistart`, `Grasp` e `IterativeLocalSearch`.
 
 Por otro lado, los algoritmos genéticos están implementados en las clases `GenerationalGenetic` y `StationaryGenetic`, teniendo ambas una base común en la clase `Genetic`. Esta última además añade funcionalidad adicional a la función objetivo, ya que la memoiza haciendo uso de un Hash para así evitar evaluaciones repetidas de la misma solución.
+
+Por último los algoritmos meméticos que combinan parte genética y búsqueda local se han implementado mediante un método `Memetic()` que permite pasar algunos parámetros y devuelve una clase con los parámetros ajustados.
 
 ## Instalación y configuración
 
@@ -648,6 +641,11 @@ Los parámetros se han establecido de la siguiente forma:
     * Tamaño de la población: 30
     * Probabilidad de cruce: 1
     * Probabilidad de mutación: 0.001
+* Memético
+    * Tamaño de la población: 10
+    * Número de generaciones entre cada BL: 10, 1
+    * Proporción de la población para BL: 1, 0.1
+    * Priorización de los mejores: sí, no
 
 ## Algoritmos para comparación: *Sequential Forward/Backward Selection*
 
@@ -878,10 +876,51 @@ Se ha planteado la cuestión de cómo altera el comportamiento del algoritmo la 
 ## Práctica 5.b: Búsquedas Híbridas
 
 ### Tablas de resultados por heurística
+
+A continuación se detallan los resultados de las distintas versiones del algoritmo memético. Por un lado, las que realizan búsqueda local cada 10 generaciones, en las tablas \ref{Memetic(10, 0.1)}, \ref{Memetic(10, 1)} y \ref{Memetic(10, 0.1mej)}. Por otro, las versiones que activan la búsqueda en cada generación se muestran en las tablas \ref{Memetic(1, 0.1)}, \ref{Memetic(1, 1)} y \ref{Memetic(1, 0.1mej)}.
+
+\begin{landscape}
+\input{"stats/latex/Memetic(10, 0.1).tex"}
+\input{"stats/latex/Memetic(10, 1).tex"}
+\input{"stats/latex/Memetic(10, 0.1mej).tex"}
+\input{"stats/latex/Memetic(1, 0.1).tex"}
+\input{"stats/latex/Memetic(1, 1).tex"}
+\input{"stats/latex/Memetic(1, 0.1mej).tex"}
+\clearpage
+\end{landscape}
+
 ### Rendimiento sobre los datos de entrenamiento
+
+\includegraphics[width=\textwidth]{stats/img/boxplot_training_wdbc_p4.png}
+
+\includegraphics[width=\textwidth]{stats/img/boxplot_training_movement_libras_p4.png}
+
+\includegraphics[width=\textwidth]{stats/img/boxplot_training_arrhythmia_p4.png}
+
 ### Rendimiento sobre los datos de test
+
+\includegraphics[width=\textwidth]{stats/img/boxplot_test_wdbc_p4.png}
+
+\includegraphics[width=\textwidth]{stats/img/boxplot_test_movement_libras_p4.png}
+
+\includegraphics[width=\textwidth]{stats/img/boxplot_test_arrhythmia_p4.png}
+
 ### Análisis de resultados
+
+Los algoritmos meméticos introducen un componente para aumentar la convergencia hacia mejores soluciones, la búsqueda local sobre individuos de la población. Es crucial ajustar bien el momento y la intensidad con la que se ejecuta, ya que un uso excesivo puede romper el equilibrio exploración-explotación, y un uso escaso puede consumir evaluaciones inútilmente. La tendencia que se observa en los resultados es, sin embargo, bastante similar a lo largo de las diferentes configuraciones de parámetros.
+
+Al observar por un lado el rendimiento en las particiones de entrenamiento, se puede apreciar que los meméticos resultan ser consistentemente peores que el genético original. Este hecho se puede deber a varios factores, pero los principales son: la variación en el tamaño de la población, siendo 10 en los meméticos frente a los 30 individuos del genético, y el consumo de evaluaciones por parte de la búsqueda local, que puede haber reducido la capacidad del algoritmo para explorar el espacio de soluciones en el mismo tiempo.
+
+En los resultados de test, sin embargo, la situación cambia ligeramente, superando o igualando esta vez los meméticos al genético. Aún así, no es tanto el caso en Arrhythmia como en los dos conjuntos restantes. Es cierto que la variabilidad de los resultados impide extraer conclusiones definitivas, pero podemos intuir que la falta de optimización local del genético conlleva una mayor penalización al pasar a evaluar en test que la falta de exploración que puedan tener los meméticos a causa del límite de evaluaciones de la función objetivo. También son relevantes algunos resultados aislados anómalamente pobres de los meméticos en Arrhythmia, como una tasa de clasificación de alrededor del 13% por parte de *Memetic(1, 1)*. Puesto que no corresponden con la tendencia general, podríamos suponer que vienen influenciados por el particionamiento de los datos que se haya realizado, y que a causa de este el conjunto de entrenamiento fuera poco representativo del de test.
+
+Las diferencias entre unos meméticos y otros son aparentemente poco significativas, y no hay un claro ganador en cuanto a rendimiento a lo largo de los distintos conjuntos de datos. Es posible que el ajuste de parámetros necesario para utilizar un algoritmo de este tipo dependa fuertemente del problema al que se va a aplicar.
+
+En cuanto a otras medidas en los resultados, el tiempo empleado por los algoritmos meméticos resulta consistentemente superior al de los genéticos, aunque inferior a las búsquedas tabú en WDBC y Movement Libras. El tiempo adicional debe ser causa de la inclusión de la búsqueda local, que necesita realizar un procesamiento distinto al de la parte genética y consume más tiempo, si bien también reduce el número de evaluaciones de las que dispone la parte genética, por lo que la diferencia no es tan notable. Además, se observa que las tasas de reducción se adaptan de forma diferente a cada conjunto de datos: los meméticos tienden a reducir menos cuando el conjunto tiene menos características; en WDBC la tasa ronda el 35%, en Libras el 48% y en Arrhythmia el 50%, frente a la tendencia del genético a reducir en torno al 50%. Este comportamiento podría ser útil si se premiaran más las tasas de reducción altas, ya que los meméticos podrían adaptarse y conseguir soluciones de calidad con buenas tasas de reducción adaptadas a cada conjunto de datos. En la situación actual, sin embargo, es un inconveniente puesto que escogen soluciones con menor reducción y de calidad similar al resto de algoritmos.
+
 ### Conclusiones
 
+La hibridación de algoritmos genéticos con búsqueda local tiene potencial para optimizar localmente las soluciones y alterar así el comportamiento del genético, que trabajará con mejores soluciones, pero es importante un buen ajuste para que la intensidad de la búsqueda no consuma demasiados recursos y limite la efectividad del genético.
+
+En los casos de estudio analizados no se ha apreciado una ventaja clara de los meméticos sobre el genético generacional en el que se basan, lo que da a considerar que el uso de un algoritmo híbrido debe ser estudiado en cada problema para comprobar si beneficiará a los resultados, y no aplicarlo en caso contrario. Si se necesitan optimizaciones muy precisas, aunque sean pequeñas, entonces sí puede convenir usar un algoritmo de este tipo.
 
 # Referencias
